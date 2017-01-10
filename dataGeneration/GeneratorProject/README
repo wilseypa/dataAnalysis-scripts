@@ -1,0 +1,87 @@
+REQUIREMENTS: 
+	-MatPlotLib for distribution plotting
+		-http://matplotlib.org/faq/installing_faq.html
+                
+              1)  git clone git://github.com/matplotlib/matplotlib.git
+              2)  cd matplotlib
+                  python setup.py install
+
+
+
+'''*************** RUNNING ****************
+
+##    python DataGenerator.py testOutput
+##    python DataGenerator.py testOutput [option=value]
+##    python DataGenerator.py testOutput infile=inputFile.txt vectors=100
+
+
+
+
+
+'''***************  NOTES  ****************
+    -Data generator for testing algorithms
+	-Specifically focused on the LSH algorithms
+    	    -Comparative analysis of old LSH v. new LSH
+	    -Significance of LSH operation on the data sets
+    -Based off of 'generate-from-labelled-dataset.py'
+
+    -Generates data column by column
+	-Significant columns are generated using centroids
+	-Nonsignificant columns are uniformly distributed
+
+    -Outputs generated data to folder
+	-Raw data (no labels)
+	-Labeled data
+	-Graph Output (Pdf/Png)
+	-Configuration output
+
+
+'''*************** OPTIONS ****************
+
+    **General Options**
+        -infile (default null)	-File for input data generation
+	
+        -minValue (default 0)	-Max value of output data
+        -maxValue (default 1)	-Min value of output data
+        -dim (default 1000)	-Number of dimensions to generate
+        -clusters (default 6)	-Number of clusters to generate
+        -vectors (default 100)	-Number of vectors to gnerate
+
+        -charts (default show) 	-Generated chart format (PDF, PNG, show, none)
+    ____________________________________
+
+
+    **Generation Distribution Options**
+        -dist (default uniform)	-Distribution to generate points on
+            -gauss or normal        -Generate points on gaussian distribution
+            -uniform or uni         -Generate points uniformly
+	    -binomial or binom
+            -exponential or exp
+            -
+
+	-distMode (default ...)	-Mode to use the distribution in
+		**Gaussian:
+			-mu (default rand between minValue and maxValue)
+			-sigma (default % of [maxValue - minValue])
+		**Binomial:
+		        -n (number of trials)
+		        -p (probability of success)
+    ____________________________________
+   
+
+    **LSH OPTIONS**
+	-corg (default random) 	-Closeness of clusters to be generated
+		-random, coupled, tripled, quadrupled, all
+	-cdist (default .15) 	-Target distance of cluster centroids
+        -csigma (default .1)	-Deviation of a cluster
+    ____________________________________
+
+        
+    **Data Randomization Options**
+        -shuffle rows
+        -shuffle columns
+    ____________________________________
+
+
+
+```****************************************'''
