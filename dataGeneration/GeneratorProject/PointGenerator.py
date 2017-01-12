@@ -50,28 +50,106 @@ def idClusters(clusters, vectors):
             retIds = np.append(retIds, z, 0);
     return retIds 
 
+def genDummyCols(argsDict, data):
+    dummyCols = int(argsDict['dummyCols'][0])
+    vectors = len(data)
+    z = np.random.uniform(0,1,[vectors, dummyCols]);
+    data = np.append(data, z, 1)
+
+    return data
+
 
 '''
     Generates centroids for clusters generation mean
         TODO: Generate nearby clusters (bi, tri, quad, none)
 '''
 def genCentroids(argsDict, clusters, minValue, maxValue):
-    #TODO - 'nearby' clustering for close neighbors
-    cOrg = 'none'    
-    z = []
-    if "corg" in argsDict:
-	cOrg = int(argsDict["corg"][0])
+    #TODO - 'nearby' clustering for close neighbor
+    zf = []
+    cOrg = argsDict["corg"][0]
+    scalePerc = argsDict['cdist'][0]
 
-    if cOrg == 'none':
-        z = np.random.uniform(minValue, maxValue, clusters)
+    if cOrg == 'random':
+        zf = np.random.uniform(minValue, maxValue, clusters)
     if cOrg == 'bi':
-        z = np.random.uniform(minValue,maxValue,clusters)
+        for i in range(0,clusters/2):
+            z = np.random.uniform(minValue,maxValue,1)
+            z1 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z = np.append(z,z1,1)
+            
+            if(zf == []):
+                zf = z
+            else:
+                zf = np.append(zf,z,1)
+                
+        if(clusters%2 > 0):
+            z = np.random.uniform(minValue,maxValue,1)
+            if(zf == []):
+                zf = z
+            else:
+                zf = np.append(zf,z,1)
+            
     if cOrg == 'tri':
-        z = np.random.uniform(minValue,maxValue,clusters)
+        for i in range(0,clusters/3):
+            z = np.random.uniform(minValue,maxValue,1)
+            z1 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z2 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z1 = np.append(z1,z2,1)
+            z = np.append(z,z1,1)
+            if(zf == []):
+                zf = z
+            else:
+                zf = np.append(zf,z,1)
+            
+        if(clusters%3 == 1):
+            np.random.uniform(minValue,maxValue,1)
+        if(clusters%3 == 2):
+            z = np.random.uniform(minValue,maxValue,1)
+            z1 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z = np.append(z,z1,1)
+            
+            if(zf == []):
+                zf = z
+            else:
+                zf = np.append(zf,z,1)
+        
     if cOrg == 'quad':
-        z = np.random.uniform(minValue,maxValue,clusters)
+        for i in range(0,clusters/4):
+            z = np.random.uniform(minValue,maxValue,1)
+            z1 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z2 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z3 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z2 = np.append(z2,z3,1)
+            z1 = np.append(z1,z2,1)
+            z = np.append(z,z1,1)
+            if(zf == []):
+                zf = z
+            else:
+                zf = np.append(zf,z,1)
+                
+        if(clusters%4 == 1):
+            np.random.uniform(minValue,maxValue,1)
+        if(clusters%4 == 2):
+            z = np.random.uniform(minValue,maxValue,1)
+            z1 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z = np.append(z,z1,1)
+            if(zf == []):
+                zf = z
+            else:
+                zf = np.append(zf,z,1)
+        if(clusters%4 == 3):
+            z = np.random.uniform(minValue,maxValue,1)
+            z1 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z2 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
+            z1 = np.append(z1,z2,1)
+            z = np.append(z,z1,1)
+            if(zf == []):
+                zf = z
+            else:
+                zf = np.append(zf,z,1)
     
-    return z
+    
+    return zf
 
 
 '''
@@ -87,8 +165,8 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
     if dist == "gauss" or dist == "normal" or dist == "norm" or dist == "gaussian":
         for r in range(1, clusters + 1):
             z = np.random.randn(bc[r], 1)
-            z = z + cents[r - 1]
             z = z * csigma
+            z = z + cents[r - 1]
             if(zf == []):
                 zf = z
             else:
@@ -100,8 +178,8 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
         if "n" in argsDict:
              n = float(argsDict["n"][0])
         for r in range(1, clusters + 1):
-            z = np.random.binomial(n,cents[r-1]/n,[bc[r], 1])
             z = z * csigma
+            z = np.random.binomial(n,cents[r-1]/n,[bc[r], 1])
             if(zf == []):
                 zf = z
             else:
