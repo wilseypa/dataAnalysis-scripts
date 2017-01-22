@@ -42,8 +42,6 @@
 
 ```****************************************'''
 
-
-
 import sys
 from DataPlotting import *
 from LeeGenerator import *
@@ -116,7 +114,7 @@ def generateData(argsDict):
     eucPlot(data, ids,cents)
     
     data = genDummyCols(argsDict,data)
-
+    
     return data, ids, cents
 
 
@@ -125,22 +123,44 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, cRaw):
     vectors = int(argsDict["vectors"][0])
     dimensions = int(argsDict["dim"][0])
     charts = argsDict['charts'][0]
-    dummyCols = argsDict['dummyCols'][0]
+    dummyCols = int(argsDict['dummyCols'][0])
+    shuffle = argsDict['shuffle'][0]
     
     outfile = file(fPathRaw + '_RAW','w')
+    
+    p = dimensions + dummyCols
+    
+    idsout = []
+    
+    if shuffle == 'all' or shuffle == 'rows':
+        z, ids, idsout = shuffleRows(z, ids)
 
     #Output Raw
-    outfile.write(str(vectors)+'\n'+str(len(z))+'\n')
+    outfile.write(str(p)+'\n'+str(len(z))+'\n')
     for i in xrange(len(z)):
-        for dim in xrange(dimensions + dummyCols):
+        for dim in xrange(p - 1):
             outfile.write(str(z[i,dim]) + '\n')
-
+    outfile.close()
+        
+    #output centroids
+    outfile = file(fPathRaw + '_CENTS.csv','w')
+    for i in xrange(len(cents)):
+        for dim in xrange(dimensions):
+            outfile.write(str(cents[i,dim]) + '\n')
+    outfile.close()
     
-    outfile = file(fPathRaw + '_LBL','w')
+    outfile = file(fPathRaw + '_LBL.csv','w')
     #Output Labeled
-    for i in xrange(len(z)):
-        for dim in xrange(dimensions + dummyCols):
-            outfile.write(str(z[i])+','+str(ids[i]) +'\n')
+    for i in xrange(len(ids)):
+        for dim in xrange(p+1):
+            outfile.write(str(idsout[i,dim]) +',')
+        outfile.write('\n')
+    outfile.close()
+        
+    outfile = file(fPathRaw + '_LBLONLY.csv','w')
+    for i in xrange(len(ids)):
+        outfile.write(str(ids[i,0]) + "\n")
+    outfile.close()
 
     #Output plots
     if(charts == 'save' or charts == 'all'):
@@ -166,8 +186,11 @@ def outputConfiguration(fPathRaw, argsDict, cRaw):
     return
 
 def shuffleRows(z, ids):
-    #TODO: need to append ids to rows so shuffle preserves ids
-    return z, ids
+    idsout = np.column_stack((z, ids - 1))
+    np.random.shuffle(idsout)
+    z = idsout[:,1:-1]
+    ids = idsout[:,-1:]
+    return z, ids, idsout
 
 def shuffleCols(data):
     data = np.transpose(data)
@@ -205,7 +228,7 @@ if len(sys.argv) > 1:
     fPathRaw += sys.argv[1]
 
 
-    for farg in sys.argv[3:]:
+    for farg in sys.argv[2:]:
 	(arg,val) = farg.split("=")
 	
         argsdict[arg] = [val]
@@ -225,13 +248,11 @@ if len(sys.argv) > 1:
     else:
         z, ids, cents = generateData(argsdict)
     
-
+        print "Finished generation, writing output..."
         if "shuffle" in argsdict:
             shuffle = argsdict['shuffle'][0]
             if shuffle == 'cols' or shuffle == 'all':
                 z = shuffleCols(z)
-            if shuffle == 'rows' or shuffle == 'all':
-                z, ids = shuffleRows(z, ids)
             
         
         outputFiles(argsdict, fPathRaw, z, ids, cents, cRaw)

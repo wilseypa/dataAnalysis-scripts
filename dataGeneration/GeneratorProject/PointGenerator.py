@@ -31,8 +31,8 @@ def genRawData(argsDict):
             centsF = cents
         else:
             zf = np.append(zf, z, 1)
-            centsF = np.append(centsF, cents,0 )
-        
+            centsF = np.column_stack((centsF, cents))
+    
     return zf, ids, centsF
 
 
@@ -43,7 +43,7 @@ def idClusters(clusters, vectors):
     retIds = []
     for i in range(1, int(clusters) + 1):
         z = np.array([i for t in range(0, vectors/clusters)])
-    
+        
         if (retIds == []):
             retIds = z
         else:
