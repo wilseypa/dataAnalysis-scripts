@@ -6,13 +6,23 @@ REQUIREMENTS:
               2)  cd matplotlib
                   python setup.py install
 
-
+			OR
+			
+			  1)  pip install matplotlib
 
 '''*************** RUNNING ****************
 
-##    python DataGenerator.py testOutput
-##    python DataGenerator.py testOutput [option=value]
-##    python DataGenerator.py testOutput infile=inputFile.txt vectors=100
+Standard Data Generator:
+
+	##    python DataGenerator.py testOutput
+	##    python DataGenerator.py testOutput [option=value]
+	##    python DataGenerator.py testOutput infile=inputFile.txt vectors=100
+	
+MultiRun with Analysis:
+
+	##    python MultiRun.py 5 1-22-17
+	##    python MultiRun.py [Num of Runs] [OutputFolderName] [option=value]
+	##    python MultiRun.py 5 1-22-17 vectors=100 clusters=6	
 
 '''***************  NOTES  ****************
 

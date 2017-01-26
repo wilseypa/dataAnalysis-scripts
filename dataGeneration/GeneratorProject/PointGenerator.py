@@ -41,7 +41,7 @@ def genRawData(argsDict):
 '''
 def idClusters(clusters, vectors):
     retIds = []
-    for i in range(1, int(clusters) + 1):
+    for i in range(0, int(clusters)):
         z = np.array([i for t in range(0, vectors/clusters)])
         
         if (retIds == []):
@@ -163,10 +163,10 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
     bc = np.bincount(ids)    
 
     if dist == "gauss" or dist == "normal" or dist == "norm" or dist == "gaussian":
-        for r in range(1, clusters + 1):
+        for r in range(0, clusters):
             z = np.random.randn(bc[r], 1)
             z = z * csigma
-            z = z + cents[r - 1]
+            z = z + cents[r]
             if(zf == []):
                 zf = z
             else:
@@ -177,9 +177,9 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
         n = 1000
         if "n" in argsDict:
              n = float(argsDict["n"][0])
-        for r in range(1, clusters + 1):
+        for r in range(0, clusters):
             z = z * csigma
-            z = np.random.binomial(n,cents[r-1]/n,[bc[r], 1])
+            z = np.random.binomial(n,cents[r]/n,[bc[r], 1])
             if(zf == []):
                 zf = z
             else:
@@ -187,7 +187,7 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
 
     if dist == "exponential" or dist == "exp":
         # mean = l^-1 = (1/l) = B
-        for r in range(1, clusters + 1): 
+        for r in range(0, clusters): 
             l = 1/cents[r - 1]
             z = np.random.exponential(l,[bc[r], 1])
             z = z*csigma
@@ -197,8 +197,8 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
                 zf = np.append(z,zf,axis=0)
 
     if dist == "uniform" or dist == "uni":
-        for r in range(1, clusters + 1):
-            z = np.random.uniform(cents[r-1] -1, cents[r-1] + 1, [bc[r], 1])
+        for r in range(0, clusters):
+            z = np.random.uniform(cents[r] -1, cents[r] + 1, [bc[r], 1])
             z = z*csigma
             if(zf == []):
                 zf = z

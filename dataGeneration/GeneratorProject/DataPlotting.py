@@ -3,17 +3,24 @@ from mpl_toolkits.mplot3d import Axes3D
 import inspect
 import numpy as np
 
-def generatePlots(fPathRaw):
+def generatePlots(fPathRaw, type):
     plt.figure(1)
-    plt.savefig(fPathRaw + '.pdf', bbox_inches='tight')
-    plt.savefig(fPathRaw + '.png', bbox_inches='tight')
+    if type == 'pdf' or type == 'all':
+        plt.savefig(fPathRaw + '.pdf', bbox_inches='tight')
+    if type == 'png' or type == 'all':
+        plt.savefig(fPathRaw + '.png', bbox_inches='tight')
 
+
+def clearPlots():
+    plt.clf()
+    return
 
 def showPlots():
     plt.show()
+    return
 
 
-def r3DPlot(xTestPts, yTestPts, zTestPts, ids, pos, cents):
+def r3DPlot(xTestPts, yTestPts, zTestPts, ids, pos, cents, match):
     x_val = [x for x in xTestPts]
     y_val = [y for y in yTestPts]
     z_val = [z for z in zTestPts]
@@ -21,29 +28,34 @@ def r3DPlot(xTestPts, yTestPts, zTestPts, ids, pos, cents):
     fig = plt.figure(1)
     ax = fig.add_subplot(pos,projection='3d')
 
-    marker = 'o'
+    markers = ['o','x']
 
-    colors = [ ' ', 'r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
-
+    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
     for i in range(0, len(x_val)):
-        ax.scatter(x_val[i], y_val[i],z_val[i],c=colors[ids[i]])
-
+        if(match == {}):
+            ax.scatter(x_val[i], y_val[i],z_val[i],c=colors[ids[i]],s=0.5)
+        else:
+            ax.scatter(x_val[i], y_val[i],z_val[i],marker=markers[match[i]],c=colors[ids[i]],s=0.5)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     
 
-def simplePlot(xTestPts, yTestPts, ids, cents):
+def simplePlot(xTestPts, yTestPts, ids, cents, match):
     x_val = [x for x in xTestPts]
     y_val = [x for x in yTestPts]
 
-    colors = [ ' ', 'r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
+    markers = ['o','x']
+    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
 
     plt.figure(1)
     plt.subplot(221)
     
     for i in range(0, len(x_val)):
-        plt.scatter(x_val[i], y_val[i], c=colors[ids[i]])
+        if (match == {}):
+            plt.scatter(x_val[i], y_val[i], c=colors[ids[i]],s=1)
+        else:
+            plt.scatter(x_val[i], y_val[i],marker=markers[match[i]],c=colors[ids[i]],s=1)
 
     #minx, maxx = checkPlotBoundaries(x_val, minx, maxx)
     #miny, maxy = checkPlotBoundaries(y_val, miny, maxy)
@@ -54,17 +66,20 @@ def simplePlot(xTestPts, yTestPts, ids, cents):
 
 
 
-def eucPlot(testPts,ids,cents):
+def eucPlot(testPts,ids,cents, match):
     x_val = []
-    colors = [ ' ', 'r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
+    markers = ['o','x']
+    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
     for row in testPts:
         x_val.append([np.linalg.norm(row)])
     plt.figure(1)
     plt.subplot(223)
 
     for i in range(0, len(x_val)):
-        
-        plt.scatter(ids[i],x_val[i], c=colors[ids[i]])
+        if(match == {}):
+            plt.scatter(ids[i],x_val[i], c=colors[ids[i]],s=3)
+        else:
+            plt.scatter(ids[i], x_val[i],marker=markers[match[i]],c=colors[ids[i]], s=3)
 
     plt.grid(True, which='both')
 

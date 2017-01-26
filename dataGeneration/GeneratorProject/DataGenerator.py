@@ -18,7 +18,7 @@
         -clusters (default 3)	-Number of clusters to generate
         -vectors (default 100)	-Number of vectors to generate
 
-        -charts (default all) 	-Generated chart format (save, show, none, all)
+        -charts (default pdf) 	-Generated chart format (save, show, none, all, png, pdf)
     ____________________________________
 
     **Generation Distribution Options**
@@ -76,9 +76,9 @@ def argsDefault(argsDict):
     ''' GENERATION DEFAULTS '''
     
     if not 'minValue' in argsDict:
-        argsDict['minValue'] = [-1]
+        argsDict['minValue'] = [-.999]
     if not 'maxValue' in argsDict:
-        argsDict['maxValue'] = [1]
+        argsDict['maxValue'] = [.9999]
     if not 'clusters' in argsDict:
         argsDict['clusters'] = [3]
     if not 'dim' in argsDict:
@@ -98,7 +98,7 @@ def argsDefault(argsDict):
     if not 'shuffle' in argsDict:
         argsDict['shuffle'] = ['all']
     if not 'charts' in argsDict:
-        argsDict['charts'] = ['all']
+        argsDict['charts'] = ['pdf']
     
     return argsDict
     
@@ -107,18 +107,19 @@ def generateData(argsDict):
 
     #Generate the data, centroids, and ids
     data, ids, cents = genRawData(argsDict)
+    clearPlots()
+    simplePlot((x[0] for x in data), (x[1] for x in data),ids,cents,{});
+    r3DPlot((x[0] for x in data), (x[1] for x in data),(x[2] for x in data), ids,222,cents,{});
+    r3DPlot((x[3] for x in data), (x[4] for x in data),(x[5] for x in data), ids,224,cents,{});
+    eucPlot(data, ids,cents,{})
     
-    simplePlot((x[0] for x in data), (x[1] for x in data),ids,cents);
-    r3DPlot((x[0] for x in data), (x[1] for x in data),(x[2] for x in data), ids,222,cents);
-    r3DPlot((x[3] for x in data), (x[4] for x in data),(x[5] for x in data), ids,224,cents);
-    eucPlot(data, ids,cents)
-    
+    sigCols = data
     data = genDummyCols(argsDict,data)
     
-    return data, ids, cents
+    return data, ids, cents, sigCols
 
 
-def outputFiles(argsDict, fPathRaw, z, ids, cents, cRaw):
+def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
     
     vectors = int(argsDict["vectors"][0])
     dimensions = int(argsDict["dim"][0])
@@ -126,20 +127,32 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, cRaw):
     dummyCols = int(argsDict['dummyCols'][0])
     shuffle = argsDict['shuffle'][0]
     
-    outfile = file(fPathRaw + '_RAW','w')
-    
     p = dimensions + dummyCols
     
     idsout = []
     
     if shuffle == 'all' or shuffle == 'rows':
-        z, ids, idsout = shuffleRows(z, ids)
+        z, ids, idsout, sigCols = shuffleRows(z, ids, sigCols)
 
     #Output Raw
-    outfile.write(str(p)+'\n'+str(len(z))+'\n')
+    outfile = file(fPathRaw + '_RAW','w')
+    outfile.write(str(len(z))+'\n'+str(p)+'\n')
     for i in xrange(len(z)):
-        for dim in xrange(p - 1):
-            outfile.write(str(z[i,dim]) + '\n')
+        for dim in xrange(p):
+            outfile.write(str(z[i,dim]))
+            if i != len(z)-1 or dim!=p-1:
+                outfile.write('\n')
+    outfile.close()
+        
+    #output significant columns
+    outfile = file(fPathRaw + '_SIG.csv','w')
+    for i in xrange(len(sigCols)):
+        for dim in xrange(dimensions):
+            outfile.write(str(sigCols[i,dim]))
+            if(dim != dimensions -1):
+                outfile.write(',')
+        if i != len(sigCols):
+            outfile.write('\n')
     outfile.close()
         
     #output centroids
@@ -158,13 +171,14 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, cRaw):
     outfile.close()
         
     outfile = file(fPathRaw + '_LBLONLY.csv','w')
+    outfile.write(str(len(ids))+'\n1\n')
     for i in xrange(len(ids)):
         outfile.write(str(ids[i,0]) + "\n")
     outfile.close()
 
     #Output plots
-    if(charts == 'save' or charts == 'all'):
-        generatePlots(fPathRaw)
+    if(charts == 'save' or charts == 'all' or charts == 'pdf' or charts == 'png'):
+        generatePlots(fPathRaw, charts)
 
     #Output configuration
     outputConfiguration(fPathRaw, argsDict, cRaw)
@@ -185,12 +199,15 @@ def outputConfiguration(fPathRaw, argsDict, cRaw):
 
     return
 
-def shuffleRows(z, ids):
-    idsout = np.column_stack((z, ids - 1))
+def shuffleRows(z, ids, sigCols):
+    idsout = np.column_stack((sigCols, z))
+    idsout = np.column_stack((idsout, ids))
     np.random.shuffle(idsout)
-    z = idsout[:,1:-1]
+    sigCols = idsout[:,:sigCols.shape[1]]
+    idsout = idsout[:,sigCols.shape[1]:]
+    z = idsout[:,:-1]
     ids = idsout[:,-1:]
-    return z, ids, idsout
+    return z, ids, idsout, sigCols
 
 def shuffleCols(data):
     data = np.transpose(data)
@@ -198,7 +215,45 @@ def shuffleCols(data):
     data = np.transpose(data)
     return data
 
+def runGenerator(foName, fName, argsDict):
 
+    fPathRaw = './' + foName + '/' + fName + '/'
+    cRaw = ''
+    for i in range(0, len(sys.argv)):
+        cRaw += sys.argv[i] + ' '
+
+    if not os.path.exists(fPathRaw):
+        os.mkdir(fPathRaw)
+    fPathRaw += fName
+
+    #Parse and fill the args dictionary
+    argsDict = argsDefault(argsDict)
+    
+    if "infile" in argsDict:  
+        outfile = file(fPathRaw, 'w')  
+        infile = file(argsDict["infile"],'r')
+
+        gendata(infile,outfile,vectors)
+
+        infile.close()
+        outfile.close()
+        
+    else:
+        z, ids, cents, sigCols = generateData(argsDict)
+    
+        if "shuffle" in argsDict:
+            shuffle = argsDict['shuffle'][0]
+            if shuffle == 'cols' or shuffle == 'all':
+                z = shuffleCols(z)
+            
+        
+        outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw)
+        
+        charts = argsDict['charts'][0]
+        #if charts == 'all' or charts == 'show':
+            #showPlots()
+
+    return
 '''****************************************'''
 
 
@@ -211,60 +266,58 @@ Main
 		-if so, use input file to generate the output data
 		-if not, use internal method to generate the output data
 '''
-
-argsdict = {}
-
-if len(sys.argv) > 1:
-
-    print "Starting generation!"
-
-    fPathRaw = './' + sys.argv[1] + '/'
-    cRaw = ''
-    for i in range(0, len(sys.argv)):
-        cRaw += sys.argv[i] + ' '
-
-    if not os.path.exists(fPathRaw):
-        os.mkdir(fPathRaw)
-    fPathRaw += sys.argv[1]
-
-
-    for farg in sys.argv[2:]:
-	(arg,val) = farg.split("=")
-	
-        argsdict[arg] = [val]
-
-    #Parse and fill the args dictionary
-    argsdict = argsDefault(argsdict)
+if __name__ == "__main__":
+    argsdict = {}
     
-    if "infile" in argsdict:  
-        outfile = file(fPathRaw, 'w')  
-    	infile = file(argsdict["infile"],'r')
-
-        gendata(infile,outfile,vectors)
-
-    	infile.close()
-        outfile.close()
+    if len(sys.argv) > 1:
+    
+        print "Starting generation!"
+    
+        fPathRaw = './' + sys.argv[1] + '/'
+        cRaw = ''
+        for i in range(0, len(sys.argv)):
+            cRaw += sys.argv[i] + ' '
+    
+        if not os.path.exists(fPathRaw):
+            os.mkdir(fPathRaw)
+        fPathRaw += sys.argv[1]
+    
+    
+        for farg in sys.argv[2:]:
+    	    (arg,val) = farg.split("=")
+            argsdict[arg] = [val]
+    
+        #Parse and fill the args dictionary
+        argsdict = argsDefault(argsdict)
         
-    else:
-        z, ids, cents = generateData(argsdict)
+        if "infile" in argsdict:  
+            outfile = file(fPathRaw, 'w')
+            infile = file(argsdict["infile"],'r')
     
-        print "Finished generation, writing output..."
-        if "shuffle" in argsdict:
-            shuffle = argsdict['shuffle'][0]
-            if shuffle == 'cols' or shuffle == 'all':
-                z = shuffleCols(z)
+            gendata(infile,outfile,vectors)
+            infile.close()
+            outfile.close()
             
+        else:
+            z, ids, cents, sigCols = generateData(argsdict)
         
-        outputFiles(argsdict, fPathRaw, z, ids, cents, cRaw)
-        
-        charts = argsdict['charts'][0]
-        if charts == 'all' or charts == 'show':
-            showPlots()
-
-    print "Finished!"
-
-else:
-    print "Requires Outputfile [Option=<...>]\n\tSee DataGenerator.py for options and information"
+            print "Finished generation, writing output..."
+            if "shuffle" in argsdict:
+                shuffle = argsdict['shuffle'][0]
+                if shuffle == 'cols' or shuffle == 'all':
+                    z = shuffleCols(z)
+                
+            
+            outputFiles(argsdict, fPathRaw, z, ids, cents, sigCols, cRaw)
+            
+            charts = argsdict['charts'][0]
+            if charts == 'all' or charts == 'show':
+                showPlots()
+    
+        print "Finished!"
+    
+    else:
+        print "Requires Outputfile [Option=<...>]\n\tSee DataGenerator.py for options and information"
 
 
 
