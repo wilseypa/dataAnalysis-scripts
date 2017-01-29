@@ -9,35 +9,44 @@
     **General Options**
         -infile (default null)	-File for input data generation
 	
-        -minValue (default -1)	-Max value of output data
-        -maxValue (default 1)	-Min value of output data
+	    -scaling (default true)     -Toggle scaling of generated data
+        -minValue (default -.999)	-Max value of output data
+        -maxValue (default .999)	-Min value of output data
         
-        -dim (default 6)	    -Number of significant columns to generate
+        -dim (default 100)	    -Number of significant columns to generate
         -dummyCols (default 50) -Number of uncorrelated columns to generate
         
         -clusters (default 3)	-Number of clusters to generate
-        -vectors (default 100)	-Number of vectors to generate
+        -vectors (default 1000)	-Number of vectors to generate
 
         -charts (default pdf) 	-Generated chart format (save, show, none, all, png, pdf)
     ____________________________________
 
     **Generation Distribution Options**
-        -dist (default uniform)	-Distribution to generate points on
+        -dist (default gauss)	-Distribution to generate points on
             -gauss or normal        -Generate points on gaussian distribution
             -uniform or uni         -Generate points uniformly
-	        -binomial or binom
-            -exponential or exp
+	        -binomial or binom      -Generate points using a binomial distribution
+            -exponential or exp     -Generate points using an exponential distribution
     ____________________________________
    
     **CENTROID OPTIONS**
-	    -corg (default random) 	-Closeness of clusters to be generated
-		    -random, bi, tri, quad, all
+	    -corg (default random) 	-Organization of clusters to be generated (pairs, triplets, etc.)
+		                            -random, bi, tri, quad, all
 	    -cdist (default .4) 	-Target distance of cluster centroid orgs
         -csigma (default .1)	-Deviation of a cluster
+        -ccounts (default random) -Cluster counts to partition total vectors into
+                                    -random, equal, (TODO)separated
     ____________________________________
 
     **Output Randomization Options**
-        -shuffle (default all)  (all, cols, rows, none)
+        -rshuf (default true)  (true, false) -Randomize the vectors (Rows)
+        -cshuf (default random) (separated, intermixed, random)
+                                    -Determine how to shuffle the columns; separated keeps significant
+                                        columns stacked on low indexed features and dummy columns on 
+                                        high indexed features; intermixed disperses evenly; random
+                                        performs a shuffle on the columns
+        -noise (default 0%) (0-1)  -TODO Amount of noise to add to final output
     ____________________________________
 
 ```****************************************'''
@@ -46,10 +55,10 @@ import sys
 from DataPlotting import *
 from LeeGenerator import *
 from PointGenerator import *
+from utils import *
+import time
 import os
-import datetime
 import numpy as np
-
 
 '''
 Notes:
@@ -60,48 +69,18 @@ Notes:
 	-Based off of 'generate-from-labelled-dataset.py'
 
 	-Generates data column by column
-		-Significant columns are generated using centroids
+		-Significant columns are generated using centroids as mean
 		-Nonsignificant columns are uniformly distributed
 
 	-Outputs generated data to folder
 		-Raw data (no labels)
 		-Labeled data
-		-Graph Output (Pdf/Png)
+		-Graph Output (pdf/png)
 		-Configuration output
 
 '''
 
 '''************** AUTHOR NICK *************'''
-def argsDefault(argsDict):
-    ''' GENERATION DEFAULTS '''
-    
-    if not 'minValue' in argsDict:
-        argsDict['minValue'] = [-.999]
-    if not 'maxValue' in argsDict:
-        argsDict['maxValue'] = [.9999]
-    if not 'clusters' in argsDict:
-        argsDict['clusters'] = [3]
-    if not 'dim' in argsDict:
-        argsDict['dim'] = [6]
-    if not 'vectors' in argsDict:
-        argsDict['vectors'] = [100]
-    if not 'dist' in argsDict:
-        argsDict['dist'] = ['gauss']
-    if not 'cdist' in argsDict:
-        argsDict['cdist'] = [0.4]
-    if not 'corg' in argsDict:
-        argsDict['corg'] = ['random']
-    if not 'csigma' in argsDict:
-        argsDict['csigma'] = [.1]
-    if not 'dummyCols' in argsDict:
-        argsDict['dummyCols'] = [50]
-    if not 'shuffle' in argsDict:
-        argsDict['shuffle'] = ['all']
-    if not 'charts' in argsDict:
-        argsDict['charts'] = ['pdf']
-    
-    return argsDict
-    
 
 def generateData(argsDict):
 
@@ -125,13 +104,13 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
     dimensions = int(argsDict["dim"][0])
     charts = argsDict['charts'][0]
     dummyCols = int(argsDict['dummyCols'][0])
-    shuffle = argsDict['shuffle'][0]
+    rshuf = argsDict['rshuf'][0]
     
     p = dimensions + dummyCols
     
     idsout = []
     
-    if shuffle == 'all' or shuffle == 'rows':
+    if rshuf == 'true':
         z, ids, idsout, sigCols = shuffleRows(z, ids, sigCols)
 
     #Output Raw
@@ -185,20 +164,6 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
 
     return
 
-
-def outputConfiguration(fPathRaw, argsDict, cRaw):
-
-    outfile = file(fPathRaw + '_CFG', 'w')
-    outfile.write('******Raw Command (COPY THIS)******')
-    outfile.write('\n\tpython ' + cRaw + '\n\n')
-
-    outfile.write('******CONFIGURATION FOR GENERATION: ' + fPathRaw + ' | ')
-    outfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +'******\n')
-
-    outfile.write('\n' + str(argsDict).replace(',','\n').replace('{',' ').replace('}','') + '\n')
-
-    return
-
 def shuffleRows(z, ids, sigCols):
     idsout = np.column_stack((sigCols, z))
     idsout = np.column_stack((idsout, ids))
@@ -216,7 +181,7 @@ def shuffleCols(data):
     return data
 
 def runGenerator(foName, fName, argsDict):
-
+    start = time.time()
     fPathRaw = './' + foName + '/' + fName + '/'
     cRaw = ''
     for i in range(0, len(sys.argv)):
@@ -240,7 +205,7 @@ def runGenerator(foName, fName, argsDict):
         
     else:
         z, ids, cents, sigCols = generateData(argsDict)
-    
+        
         if "shuffle" in argsDict:
             shuffle = argsDict['shuffle'][0]
             if shuffle == 'cols' or shuffle == 'all':
@@ -250,10 +215,10 @@ def runGenerator(foName, fName, argsDict):
         outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw)
         
         charts = argsDict['charts'][0]
-        #if charts == 'all' or charts == 'show':
-            #showPlots()
-
-    return
+        if charts == 'all' or charts == 'show':
+            showPlots()
+    end = time.time()
+    return (end-start)
 '''****************************************'''
 
 
@@ -273,46 +238,12 @@ if __name__ == "__main__":
     
         print "Starting generation!"
     
-        fPathRaw = './' + sys.argv[1] + '/'
-        cRaw = ''
-        for i in range(0, len(sys.argv)):
-            cRaw += sys.argv[i] + ' '
-    
-        if not os.path.exists(fPathRaw):
-            os.mkdir(fPathRaw)
-        fPathRaw += sys.argv[1]
-    
-    
         for farg in sys.argv[2:]:
-    	    (arg,val) = farg.split("=")
+            (arg,val) = farg.split("=")
             argsdict[arg] = [val]
     
-        #Parse and fill the args dictionary
-        argsdict = argsDefault(argsdict)
+        runGenerator(sys.argv[1],sys.argv[1],argsdict)
         
-        if "infile" in argsdict:  
-            outfile = file(fPathRaw, 'w')
-            infile = file(argsdict["infile"],'r')
-    
-            gendata(infile,outfile,vectors)
-            infile.close()
-            outfile.close()
-            
-        else:
-            z, ids, cents, sigCols = generateData(argsdict)
-        
-            print "Finished generation, writing output..."
-            if "shuffle" in argsdict:
-                shuffle = argsdict['shuffle'][0]
-                if shuffle == 'cols' or shuffle == 'all':
-                    z = shuffleCols(z)
-                
-            
-            outputFiles(argsdict, fPathRaw, z, ids, cents, sigCols, cRaw)
-            
-            charts = argsdict['charts'][0]
-            if charts == 'all' or charts == 'show':
-                showPlots()
     
         print "Finished!"
     
@@ -322,17 +253,3 @@ if __name__ == "__main__":
 
 
 '''****************************************'''
-
-
-''' Possible (not implemented) Options:
-	-noise (%)
-	
-	-Cluster counts weighting (currently all weights are equal)
-
-    **Target options**
-	-purity (default ?)	-Target purity of output data
-	-ari	(default ?)	-Target ARI of output data
-	-WCSSE	(default ?) 	-Target WCSSE of output data
-	-sil	(default ?)	-Target silhouette of output data
-
-'''

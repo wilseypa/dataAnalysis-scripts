@@ -20,35 +20,62 @@ def genRawData(argsDict):
     dist = argsDict["dist"][0]
     cdist = float(argsDict["cdist"][0])
     csigma = float(argsDict["csigma"][0])
+    scaling = argsDict["scaling"][0]
 
-    ids = idClusters(clusters, vectors)
+    ids = idClusters(argsDict, clusters, vectors)
    
     for dim in range(0, dimensions):
         z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma)
-        z = scaleRawData(argsDict, z, minValue, maxValue);
+        if(scaling == 'true'):
+            z = scaleRawData(argsDict, z, minValue, maxValue);
         if(zf == []):
             zf = z
             centsF = cents
         else:
             zf = np.append(zf, z, 1)
             centsF = np.column_stack((centsF, cents))
-    
     return zf, ids, centsF
 
 
 '''
     Generates cluster ids from 1 to # of clusters
 '''
-def idClusters(clusters, vectors):
+def idClusters(argsDict, clusters, vectors):
     retIds = []
-    for i in range(0, int(clusters)):
-        z = np.array([i for t in range(0, vectors/clusters)])
+    ccounts = argsDict["ccounts"][0]
+    
+    if ccounts == 'equal' or ccounts == 'ranom':
+        for i in range(0, int(clusters)):
+            z = np.array([i for t in range(0, vectors/clusters)])
+            
+            if (retIds == []):
+                retIds = z
+            else:
+                retIds = np.append(retIds, z);   
+            
+    elif ccounts == 'separated':
+        #TODO: 
+        print "Not Implemented" 
+    else: #random or nothing was entered
+        zc = (np.random.randn(clusters) * (.1*(vectors/clusters))) + (vectors/clusters)
+        tot = 0
+        for i in range(0,int(clusters) - 1):
+            z = np.array([i for t in range(0, int(zc[i])) ])
+            
+            tot = tot + int(zc[i])
+            
+            if (retIds == []):
+                retIds = z
+            else:
+                retIds = np.hstack((retIds, z)); 
         
+        z = np.array([int(clusters-1) for t in range(0, vectors - tot)])
         if (retIds == []):
             retIds = z
         else:
-            retIds = np.append(retIds, z, 0);
-    return retIds 
+            retIds = np.hstack((retIds, z)); 
+    
+    return retIds
 
 def genDummyCols(argsDict, data):
     dummyCols = int(argsDict['dummyCols'][0])
@@ -75,12 +102,12 @@ def genCentroids(argsDict, clusters, minValue, maxValue):
         for i in range(0,clusters/2):
             z = np.random.uniform(minValue,maxValue,1)
             z1 = np.random.uniform((1-scalePerc)*z,(1+scalePerc)*z,1)
-            z = np.append(z,z1,1)
+            z = np.vstack((z,z1))
             
             if(zf == []):
                 zf = z
             else:
-                zf = np.append(zf,z,1)
+                zf = np.vstack((zf,z))
                 
         if(clusters%2 > 0):
             z = np.random.uniform(minValue,maxValue,1)
@@ -168,11 +195,11 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
             z = z * csigma
             z = z + cents[r]
             if(zf == []):
-                zf = z
+                zf=np.copy(z)
             else:
-                zf = np.append(z, zf, axis=0)
-
-    if dist == "binomial" or dist == "binom":
+                zf = np.vstack((zf, z))
+            
+    elif dist == "binomial" or dist == "binom":
         # n * p = mean; mean/n = p
         n = 1000
         if "n" in argsDict:
@@ -185,7 +212,7 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
             else:
                 zf = np.append(z,zf,axis=0)
 
-    if dist == "exponential" or dist == "exp":
+    elif dist == "exponential" or dist == "exp":
         # mean = l^-1 = (1/l) = B
         for r in range(0, clusters): 
             l = 1/cents[r - 1]
@@ -196,7 +223,7 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
             else:
                 zf = np.append(z,zf,axis=0)
 
-    if dist == "uniform" or dist == "uni":
+    elif dist == "uniform" or dist == "uni":
         for r in range(0, clusters):
             z = np.random.uniform(cents[r] -1, cents[r] + 1, [bc[r], 1])
             z = z*csigma

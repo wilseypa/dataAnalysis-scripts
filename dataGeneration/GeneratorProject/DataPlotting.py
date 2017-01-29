@@ -42,8 +42,10 @@ def r3DPlot(xTestPts, yTestPts, zTestPts, ids, pos, cents, match):
     
 
 def simplePlot(xTestPts, yTestPts, ids, cents, match):
+    clearPlots()
     x_val = [x for x in xTestPts]
     y_val = [x for x in yTestPts]
+    
 
     markers = ['o','x']
     colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
