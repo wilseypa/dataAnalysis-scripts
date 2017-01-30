@@ -3,6 +3,9 @@ import subprocess
 import time
 
 
+'''************** AUTHOR NICK *************'''
+
+
 def runRPjava(numClusters, fPath, fName):
     start = time.time()
     returnCode = subprocess.call("java -jar ./RPHash.jar " + fName + " " + str(numClusters) + " " + fName + "RPOut multiproj parallel=true offlineclusterer=kmeans runs=5")
@@ -14,12 +17,15 @@ def runRPjava(numClusters, fPath, fName):
     return returnCode, (end - start)
 
 
+def readMetrics(fPath):
+    if os.path.isfile(fPath + 'metrics_time_memkb_wcsse.csv'):
+        outfile = file(fPath + 'metrics_time_memkb_wcsse.csv', 'r')
+        out = outfile.read();
+        outfile.close()
+    return out.rstrip()
+
+
 def runRPSeq():
-    #start = time.time()
-    #runGenerator(foName, foName + str(i), argsdict)
-    #end = time.time()
-    #GenTime = (end-start)
-    
     fPath = './' + foName + '/' + foName + str(i) + '/'
     fileN = fPath + foName + str(i) + '_RAW'
     start = time.time()
@@ -48,3 +54,8 @@ def runRPSeq():
             print str(i) + ": Labeler Returned 1, skipping analysis"
     else:
         print str(i) + ": RPHash Returned 1, skipping labeler, analysis"
+        
+        
+        
+
+'''****************************************'''

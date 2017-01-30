@@ -13,7 +13,6 @@ from DataPlotting import *
 from utils import *
 from stats import *
 import sys
-import csv
 import os
 import datetime
 import time
@@ -27,12 +26,13 @@ Notes:
 
 '''************** AUTHOR NICK *************'''
 
+'''
+    Read raw input from file
+'''
 def readInputFromFile(rawFileName):
     infile = file(rawFileName,'r')
-    
     vects = infile.readline()
     cols = infile.readline()
-    
     zf = []
     
     for v in xrange(int(vects)):
@@ -50,16 +50,13 @@ def readInputFromFile(rawFileName):
             zf = zi
         else:
             zf = np.vstack((zf,zi))
-            
+    infile.close()
     return zf.astype(int)
     
 
-def readDataFromFile(rawFileName, type):
-    result = csv.reader(open(rawFileName,"rb"),delimiter=',')
-    result = np.array(list(result)).astype('float')
-    return result.astype(type)
-
-    
+'''
+    Map the input ids to the ground truth ids 
+'''
 def mapIdstoInput(ids, input):
     #Lazy way of doing this - rework?
     mapping =[]
@@ -85,7 +82,9 @@ def mapIdstoInput(ids, input):
     
     return mapping
     
-
+'''
+    Output the results, configuration, plot files to the file path 
+'''
 def outputFiles(argsDict, fPathRaw, cRaw):
         
     charts = argsDict['charts'][0]
@@ -107,7 +106,9 @@ def outputFiles(argsDict, fPathRaw, cRaw):
 
     return
 
-
+'''
+    Run the analysis on output labels and ground truths
+'''
 def runAnalysis(lblPathRaw, inputPathRaw, outPathRaw, sigColsPath):
     start = time.time()
     argsdict = {}

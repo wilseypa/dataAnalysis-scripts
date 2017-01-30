@@ -1,8 +1,7 @@
-
-
 import numpy as np
 
 
+'''************** AUTHOR NICK *************'''
 
 
 def calcPurity(ids, input, mapping):
@@ -39,3 +38,6 @@ def calcARI(ids, input, mapping):
 def calcRI(ids, input, mapping):
     
     return
+
+
+'''****************************************'''

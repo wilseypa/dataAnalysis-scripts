@@ -3,6 +3,10 @@ from mpl_toolkits.mplot3d import Axes3D
 import inspect
 import numpy as np
 
+'''************** AUTHOR NICK *************'''
+'''
+    Generate plots in to the filepath
+'''
 def generatePlots(fPathRaw, type):
     plt.figure(1)
     if type == 'pdf' or type == 'all':
@@ -10,16 +14,23 @@ def generatePlots(fPathRaw, type):
     if type == 'png' or type == 'all':
         plt.savefig(fPathRaw + '.png', bbox_inches='tight')
 
-
+'''
+    Clear the in-memory plot
+'''
 def clearPlots():
     plt.clf()
     return
 
+'''
+    Show the in-memory plot
+'''
 def showPlots():
     plt.show()
     return
 
-
+'''
+    Generate 3D plot for generation and result matching
+'''
 def r3DPlot(xTestPts, yTestPts, zTestPts, ids, pos, cents, match):
     x_val = [x for x in xTestPts]
     y_val = [y for y in yTestPts]
@@ -40,7 +51,9 @@ def r3DPlot(xTestPts, yTestPts, zTestPts, ids, pos, cents, match):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     
-
+'''
+    Generate 2D plot for generation and result matching
+'''
 def simplePlot(xTestPts, yTestPts, ids, cents, match):
     clearPlots()
     x_val = [x for x in xTestPts]
@@ -67,7 +80,9 @@ def simplePlot(xTestPts, yTestPts, ids, cents, match):
     plt.grid(True, which='both')
 
 
-
+'''
+    Generate EUC distance plot for generation and result matching
+'''
 def eucPlot(testPts,ids,cents, match):
     x_val = []
     markers = ['o','x']
@@ -84,9 +99,11 @@ def eucPlot(testPts,ids,cents, match):
             plt.scatter(ids[i], x_val[i],marker=markers[match[i]],c=colors[ids[i]], s=3)
 
     plt.grid(True, which='both')
+    return
 
-
-
+'''
+    Check and set the plot boundaries (not used)
+'''
 def checkPlotBoundaries(xTestPts, minx, maxx):
     if(min(xTestPts) < minx):
         minx = min(xTestPts) - 1
@@ -95,7 +112,9 @@ def checkPlotBoundaries(xTestPts, minx, maxx):
 
     return minx, maxx
 
-
+'''
+    Generate squared distance plot for generation (not used)
+'''
 def sqDistPlot(testPts, minx, miny, maxx, maxy):
     vals = [];    
     i=0
@@ -106,6 +125,6 @@ def sqDistPlot(testPts, minx, miny, maxx, maxy):
             euc += pow(x[z] ,2)
 	vals[i] = euc
 
-
     simplePlot(vals, vals, minx, miny, maxx, maxy)
     
+'''****************************************'''

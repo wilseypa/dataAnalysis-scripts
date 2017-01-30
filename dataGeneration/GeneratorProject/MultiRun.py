@@ -92,13 +92,13 @@ def runReadResults():
     purity = runAnalysis()
     return purity
 
-def runMultiRun(argsdict, foName, fName, runs):
+def runMultiRun(argsdict, foName, fName, runs, runTag):
     sysStart = time.time()
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
     outFN = './' + foName + '/Results_' + fName + '_' + str(datetime.date.today()).replace(' ','_') + '.csv'
     outfile = file(outFN, 'w')
-    outfile.write('Run,fileN,GenTime,RPTime,AnalysisTime,Purity\n')
+    outfile.write('Run,fileN,GenTime,RPTime,AnalysisTime,Purity,Time,MemKB,WCSSE\n')
     outfile.close()
     
     for i in xrange(runs):       
@@ -112,8 +112,9 @@ def runMultiRun(argsdict, foName, fName, runs):
 
         # 2) Run RPHash on generated data
         rc, RPTime = runRPjava(int(argsdict['clusters'][0]),fPath ,fileN)
-
+        
         if(rc == 0): 
+            rpMetrics = readMetrics(fPath)
             dataN = fileN
             fileN = fileN + 'RPOut.RPHashMultiProj'
             
@@ -128,7 +129,7 @@ def runMultiRun(argsdict, foName, fName, runs):
                 purity, aTime = runAnalysis(lblN, inP, fileN + '.Results', sigCol)
                 
                 outfile = file(outFN, 'a')
-                outfile.write(str(i) + ',' + foName + str(i) + ',' + str(GenTime) + ',' + str(RPTime) + ',' + str(aTime) + ',' + str(purity) + '\n')
+                outfile.write(runTag + '_' + str(i) + ',' + foName + str(i) + ',' + str(GenTime) + ',' + str(RPTime) + ',' + str(aTime) + ',' + str(purity) + ',' + str(rpMetrics) + '\n')
                 outfile.close()
             else:
                 print str(i) + ": Labeler Returned 1, skipping analysis"
@@ -154,6 +155,10 @@ Main
         -if not, use internal method to generate the output data
 '''
 if __name__ == "__main__":
+    if not os.path.exists('./RPHash.jar'):
+        print "Missing RPHash.jar from root directory - copy before running generator"
+    if not os.path.exists('./Labeler.jar'):
+        print "Missing Labeler.jar from root directory - copy before running generator"
     
     argsdict = {}
     if len(sys.argv) > 2:
@@ -173,9 +178,9 @@ if __name__ == "__main__":
             
         argsdict = argsDefault(argsdict)
         
-        runMultiRun(argsdict, foName, foName, runs)
+        runMultiRun(argsdict, foName, foName, runs,'')
         
     else:
         print "Requires [numRuns] [outFolder] [Option=<...>]\n\tSee MultiRun.py for options and information"
-    
-    
+
+'''****************************************'''

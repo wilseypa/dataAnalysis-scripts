@@ -52,22 +52,69 @@
 ```****************************************'''
 
 from MultiRun import *
+import glob
+from itertools import islice
 
 
+'''************** AUTHOR NICK *************'''
+
+'''
+    Run a dimension test, varying the significant dimensions from 50 to 1000
+'''
+def dimensionTest(argsDict, foName):
+    results = ''
+    
+    if not os.path.exists('./' + foName + '/'):
+        os.mkdir('./' + foName + '/')
+    
+    for i in range(0, 20):
+        argsDict['dim'] = [(20-i) * 50]
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 2, 'DIM='+str(argsDict['dim'][0]))
+        results = aggResults(argsDict, foName, results, i)
+
+    outfile = file('./' + foName + '/RESULTS_DIMTEST.csv', 'w')
+    outfile.write(results)
+    outfile.close()
+    return
+
+'''
+    Run an overlap test, varying the cluster distance from 5 to .5
+'''
 def overlapTest(argsDict, foName):
     argsDict['clusters'] = [4]
     argsDict['csigma'] = [.05]
     argsDict['corg'] = ['bi']
     argsDict['vectors'] = [1000]
-    
+    results = ''
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
     
     for i in range(0, 10):
         argsDict['cdist'] = [.5 * (10-i)]
-        print argsDict['cdist'][0]
-        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 5)
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 5, 'CDIST='+str(argsDict['cdist'][0]))
+        results = aggResults(argsDict, foName, results, i)
 
+    outfile = file('./' + foName + '/RESULTS_OVERLAP.csv', 'w')
+    outfile.write(results)
+    outfile.close()
+    return
+
+'''
+    Aggregate the multirun result files
+        TODO: Continuous file write for testing in case of exception
+'''
+def aggResults(argsDict, foName, results,i):
+    r = glob.glob(('./' + foName + '/' + foName + str(i) + '/*.csv'))
+    if os.path.isfile(r[0]):
+        out = file(r[0], 'r')
+        if results == '':
+            results = out.read()
+        else:
+            currentLine = out.readlines()[1:]
+            for line in currentLine:
+                results = results + line
+        out.close()
+    return results
 
 '''
 Main
@@ -95,5 +142,10 @@ if __name__ == "__main__":
             
         if testType == 'overlap':
             overlapTest(argsdict, foName)
+        if testType == 'dim' or testType == 'dimension' or testType == 'dimensional':
+            dimensionTest(argsdict,foName)
         
+        
+
+'''****************************************'''
     

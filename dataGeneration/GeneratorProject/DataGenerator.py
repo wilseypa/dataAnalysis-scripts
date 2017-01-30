@@ -82,6 +82,9 @@ Notes:
 
 '''************** AUTHOR NICK *************'''
 
+'''
+    Run data generation with the functions in genRawData (PointGenerator.py)
+'''
 def generateData(argsDict):
 
     #Generate the data, centroids, and ids
@@ -97,7 +100,9 @@ def generateData(argsDict):
     
     return data, ids, cents, sigCols
 
-
+'''
+    Output the generated files - RAW, SIG, CENTS, LBL, LBLONLY
+'''
 def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
     
     vectors = int(argsDict["vectors"][0])
@@ -164,6 +169,9 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
 
     return
 
+'''
+    append the ids to the data, then shuffle the rows to retain data ids
+'''
 def shuffleRows(z, ids, sigCols):
     idsout = np.column_stack((sigCols, z))
     idsout = np.column_stack((idsout, ids))
@@ -174,15 +182,24 @@ def shuffleRows(z, ids, sigCols):
     ids = idsout[:,-1:]
     return z, ids, idsout, sigCols
 
+'''
+    Transposes, shuffles columns (now rows), then transpose back for shuffled columns
+'''
 def shuffleCols(data):
     data = np.transpose(data)
     np.random.shuffle(data)
     data = np.transpose(data)
     return data
 
+'''
+    Run the generator from another script
+'''
 def runGenerator(foName, fName, argsDict):
     start = time.time()
-    fPathRaw = './' + foName + '/' + fName + '/'
+    if foName == fName:
+        fPathRaw = './' + foName + '/'
+    else:
+        fPathRaw = './' + foName + '/' + fName + '/'
     cRaw = ''
     for i in range(0, len(sys.argv)):
         cRaw += sys.argv[i] + ' '

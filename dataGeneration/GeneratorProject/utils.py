@@ -1,6 +1,8 @@
 import datetime
 from DataPlotting import *
+import csv
 
+'''************** AUTHOR NICK *************'''
 
 def argsDefault(argsDict):
     ''' GENERATION DEFAULTS '''
@@ -8,7 +10,7 @@ def argsDefault(argsDict):
     if not 'minValue' in argsDict:  #DEFAULT  -.999
         argsDict['minValue'] = [-.999]
     if not 'maxValue' in argsDict:  #DEFAULT .999
-        argsDict['maxValue'] = [.9999]
+        argsDict['maxValue'] = [.999]
     if not 'scaling' in argsDict:  #DEFAULT 'true'
         argsDict['scaling'] = ['true']
     if not 'clusters' in argsDict:  #DEFAULT 3
@@ -21,7 +23,7 @@ def argsDefault(argsDict):
         argsDict['dist'] = ['gauss']
     if not 'cdist' in argsDict:  #DEFAULT .4
         argsDict['cdist'] = [0.4]
-    if not 'corg' in argsDict:  #DEFAULT random
+    if not 'corg' in argsDict:  #DEFAULT 'random'
         argsDict['corg'] = ['random']
     if not 'csigma' in argsDict:  #DEFAULT .1
         argsDict['csigma'] = [.1]
@@ -39,6 +41,12 @@ def argsDefault(argsDict):
         argsDict['noise'] = [0]
     
     return argsDict
+
+def readDataFromFile(rawFileName, type):
+    result = csv.reader(open(rawFileName,"rb"),delimiter=',')
+    result = np.array(list(result)).astype('float')
+    return result.astype(type)
+
 
 def generateChart(data, lbls, input, mapping):
     match = {}
@@ -76,3 +84,6 @@ def outputConfiguration(fPathRaw, argsDict, cRaw):
     outfile.write('\n' + str(argsDict).replace(',','\n').replace('{',' ').replace('}','') + '\n')
 
     return
+
+
+'''****************************************'''

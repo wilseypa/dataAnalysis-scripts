@@ -2,6 +2,8 @@ import sys
 import numpy as np
 from random import *
 
+'''************** AUTHOR NICK *************'''
+
 '''
     Generates entire dataset by creating ids and generating raw columns
 
@@ -248,5 +250,6 @@ def scaleRawData(argsDict, z, minValue, maxValue):
     z = minValue + z* (maxValue - minValue)
     return z
 
+'''****************************************'''
 
     
