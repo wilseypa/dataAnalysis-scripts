@@ -7,6 +7,10 @@
 '''*************** OPTIONS ****************
 
     **General Options**
+        -exec (default all)    -Determine what programs to use for analysis
+                                'all' - use RPHash and LSHKit (see req's)
+                                    'rphash', 'lshkit', 'none')
+    
         -infile (default null)    -File for input data generation
     
         -scaling (default true)     -Toggle scaling of generated data
@@ -52,8 +56,8 @@
 ```****************************************'''
 
 from DataGenerator import *
-from ReadResults import *
 from RPTestSeq import *
+from LSHKitSeq import *
 from utils import *
 import sys
 import os
@@ -84,23 +88,31 @@ Notes:
 
 '''************** AUTHOR NICK *************'''
 
-def runLabeler(fPath, fName, dataN):
-    returnCode = subprocess.call("java -jar ./LabelData.jar " + fName+" " + dataN + " " + fName+".labeled" )
-    return returnCode
-
-def runReadResults():
-    purity = runAnalysis()
-    return purity
-
 def runMultiRun(argsdict, foName, fName, runs, runTag):
-    sysStart = time.time()
+    #Check if runtype = rphash/lshkit/all/none
+    
+    
+    #Check for necessary files of each
+    if not os.path.exists('./RPHash.jar'):
+        print "Missing RPHash.jar from root directory - copy before running generator"
+        return
+    if not os.path.exists('./LabelData.jar'):
+        print "Missing LabelData.jar from root directory - copy before running generator"
+        return
+    
+    #Create a folder for the current test
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
+        
+    #Create our results file and write a header
     outFN = './' + foName + '/Results_' + fName + '_' + str(datetime.date.today()).replace(' ','_') + '.csv'
+    
     outfile = file(outFN, 'w')
     outfile.write('Run,fileN,GenTime,RPTime,AnalysisTime,Purity,Time,MemKB,WCSSE\n')
     outfile.close()
     
+    
+    #For Runs...
     for i in xrange(runs):       
         print str(i) + ": Starting run"
         
@@ -108,36 +120,18 @@ def runMultiRun(argsdict, foName, fName, runs, runTag):
         GenTime = runGenerator(foName, fName + str(i), argsdict)
         
         fPath = './' + foName + '/' + fName + str(i) + '/'
-        fileN = fPath + fName + str(i) + '_RAW'
-
-        # 2) Run RPHash on generated data
-        rc, RPTime = runRPjava(int(argsdict['clusters'][0]),fPath ,fileN)
+        fileN = fPath + fName + str(i)
+               
+        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "lshkit"):
+            # Run LSHKIT
+            runLSHKit(fPath, fileN)
+        fileN += '_RAW'
         
-        if(rc == 0): 
-            rpMetrics = readMetrics(fPath)
-            dataN = fileN
-            fileN = fileN + 'RPOut.RPHashMultiProj'
-            
-            # 3) Run labeler on RPHash Centroids
-            rc = runLabeler(fPath, fileN, dataN)
-            
-            if(rc == 0):
-                inP = fileN+".labeled"
-                lblN = fPath + fName + str(i) + '_LBLONLY.csv'
-                sigCol = fPath + fName + str(i) + '_SIG.csv'
-                
-                purity, aTime = runAnalysis(lblN, inP, fileN + '.Results', sigCol)
-                
-                outfile = file(outFN, 'a')
-                outfile.write(runTag + '_' + str(i) + ',' + foName + str(i) + ',' + str(GenTime) + ',' + str(RPTime) + ',' + str(aTime) + ',' + str(purity) + ',' + str(rpMetrics) + '\n')
-                outfile.close()
-            else:
-                print str(i) + ": Labeler Returned 1, skipping analysis"
-        else:
-            print str(i) + ": RPHash Returned 1, skipping labeler, analysis"
-    sysEnd = time.time()    
-    print "Finished! Took " + str(sysEnd-sysStart) + " seconds! OR " + str((sysEnd-sysStart)/float(60.0)) + " minutes!"
-    print "\tAverage time per run: " + str((sysEnd-sysStart)/runs) + " seconds"
+        
+        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash"):
+            # Run RPHash
+            runRPSeq(argsdict, fPath, fileN, fName, i, outFN, runTag,foName,GenTime)
+        
     return
     
 
@@ -155,10 +149,6 @@ Main
         -if not, use internal method to generate the output data
 '''
 if __name__ == "__main__":
-    if not os.path.exists('./RPHash.jar'):
-        print "Missing RPHash.jar from root directory - copy before running generator"
-    if not os.path.exists('./Labeler.jar'):
-        print "Missing Labeler.jar from root directory - copy before running generator"
     
     argsdict = {}
     if len(sys.argv) > 2:

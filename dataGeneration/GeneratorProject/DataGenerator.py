@@ -139,6 +139,14 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
             outfile.write('\n')
     outfile.close()
         
+    #output LSHKIT
+    outfile = file(fPathRaw + '_LSHKIT','w')
+    for i in xrange(len(z)):
+        for dim in xrange(dimensions):
+            outfile.write(str(z[i,dim]) + ' ')
+        outfile.write('\n')
+    outfile.close()
+        
     #output centroids
     outfile = file(fPathRaw + '_CENTS.csv','w')
     for i in xrange(len(cents)):

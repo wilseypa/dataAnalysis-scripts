@@ -7,6 +7,10 @@
 '''*************** OPTIONS ****************
 
     **General Options**
+        -exec (default all)    -Determine what programs to use for analysis
+                                'all' - use RPHash and LSHKit (see req's)
+                                    'rphash', 'lshkit', 'none'
+    
         -infile (default null)    -File for input data generation
     
         -scaling (default true)     -Toggle scaling of generated data
@@ -81,10 +85,9 @@ def dimensionTest(argsDict, foName):
     Run an overlap test, varying the cluster distance from 5 to .5
 '''
 def overlapTest(argsDict, foName):
-    argsDict['clusters'] = [4]
+    argsDict['clusters'] = [2]
     argsDict['csigma'] = [.05]
     argsDict['corg'] = ['bi']
-    argsDict['vectors'] = [1000]
     results = ''
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
@@ -95,6 +98,28 @@ def overlapTest(argsDict, foName):
         results = aggResults(argsDict, foName, results, i)
 
     outfile = file('./' + foName + '/RESULTS_OVERLAP.csv', 'w')
+    outfile.write(results)
+    outfile.close()
+    return
+
+'''
+    Run a column noise test, varying the significant dimensions from 1000/1000 to 0/1000
+'''
+def colNoiseTest(argsDict, foName):
+    v = 1000
+    
+    results = ''
+    if not os.path.exists('./' + foName + '/'):
+        os.mkdir('./' + foName + '/')
+    
+    for i in range(0, 11):
+        c = int((10-i) * v/10)
+        argsDict['dim'][0] = c
+        argsDict['dummyCols'][0] = int(v - c)
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 5, 'dim='+str(argsDict['dim'][0]))
+        results = aggResults(argsDict, foName, results, i)
+
+    outfile = file('./' + foName + '/RESULTS_COLNOISE.csv', 'w')
     outfile.write(results)
     outfile.close()
     return
@@ -140,12 +165,13 @@ if __name__ == "__main__":
         
             argsdict[arg] = [val]
             
+        argsdict = argsDefault(argsdict)
         if testType == 'overlap':
             overlapTest(argsdict, foName)
         if testType == 'dim' or testType == 'dimension' or testType == 'dimensional':
             dimensionTest(argsdict,foName)
+        if testType == 'col' or testType == 'colNoise':
+            colNoiseTest(argsdict, foName)
         
-        
-
 '''****************************************'''
     

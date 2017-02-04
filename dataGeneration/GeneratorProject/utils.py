@@ -39,6 +39,10 @@ def argsDefault(argsDict):
         argsDict['ccounts'] = ['random']
     if not 'noise' in argsDict:  #DEFAULT 0
         argsDict['noise'] = [0]
+    if not 'ext' in argsDict:  #DEFAULT 'all'
+        argsDict['ext'] = ['all']
+    if not 'exec' in argsDict:  #DEFAULT 'all'
+        argsDict['exec'] = ['all']
     
     return argsDict
 
