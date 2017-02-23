@@ -1,8 +1,20 @@
 import numpy as np
-
+from sklearn import metrics
 
 '''************** AUTHOR NICK *************'''
-
+def calcCentroidMetrics(ids,input,mapping):
+    ids = ids.flatten()
+    input = input.flatten()
+    ari = metrics.adjusted_rand_score(ids,input)
+    nmi = metrics.normalized_mutual_info_score(ids,input)
+    ami = metrics.adjusted_mutual_info_score(ids,input)
+    homogeneity = metrics.homogeneity_score(ids,input)
+    completeness = metrics.completeness_score(ids,input)
+    vscore = metrics.v_measure_score(ids,input)
+    fmi = metrics.fowlkes_mallows_score(ids,input)
+    
+    return ari,nmi,ami,homogeneity,completeness,vscore,fmi
+    
 
 def calcPurity(ids, input, mapping):
     bcid = np.bincount(ids) 
@@ -15,29 +27,11 @@ def calcPurity(ids, input, mapping):
                 count += 1
     
     purity = count/float(len(input))
-    print "\tRun Purity: " + str(purity)
-    if purity == 0.0:
-        print bcid
-        print bcin
     
     return purity
 
 
 
-
-def calcARI(ids, input, mapping):
-    
-    
-    
-    return
-
-
-
-
-
-def calcRI(ids, input, mapping):
-    
-    return
 
 
 '''****************************************'''

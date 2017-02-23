@@ -29,7 +29,7 @@ Notes:
 '''
     Read raw input from file
 '''
-def readInputFromFile(rawFileName):
+def readInputFromFile(rawFileName, type):
     infile = file(rawFileName,'r')
     vects = infile.readline()
     cols = infile.readline()
@@ -51,7 +51,7 @@ def readInputFromFile(rawFileName):
         else:
             zf = np.vstack((zf,zi))
     infile.close()
-    return zf.astype(int)
+    return zf.astype(type)
     
 
 '''
@@ -70,7 +70,6 @@ def mapIdstoInput(ids, input):
                     current[int(ids[z])] = 1
         max = 0
         maxI = 0
-        print "\t" + str(i) + ": " + str(current)
         for z in current:
             if(current[z] > max):
                 max = int(current[z])
@@ -106,32 +105,52 @@ def outputFiles(argsDict, fPathRaw, cRaw):
 
     return
 
-'''
-    Run the analysis on output labels and ground truths
-'''
-def runAnalysis(lblPathRaw, inputPathRaw, outPathRaw, sigColsPath):
+def runRawAnalysis(argsdict,lbls,inputs,outPathRaw,sigColsPath, tt):
     start = time.time()
-    argsdict = {}
     
-    ids = readDataFromFile(lblPathRaw, 'int')
     sigCols = readDataFromFile(sigColsPath, 'float')
-    input = readInputFromFile(inputPathRaw)
     cRaw = ''
-    ids = ids[2:,-1]
     zf = []
     
-    #Parse and fill the args dictionary
-    argsdict = argsDefault(argsdict)
-    mapping = mapIdstoInput(ids, input)
-    purity = calcPurity(ids, input, mapping)
-    generateChart(sigCols, ids, input, mapping)
+    #mapping = mapIdstoInput(lbls, inputs)
+    mapping = {}
+    ari,nmi,ami,homogeneity,completeness,vscore,fmi = calcCentroidMetrics(lbls,inputs,mapping)
+    generateChart(sigCols, lbls, inputs, mapping)
     #showPlots()
     outputFiles(argsdict, outPathRaw,cRaw)
     charts = argsdict['charts'][0]
     if charts == 'all' or charts == 'show':
         showPlots()
     end = time.time()
-    return purity, (end - start)
+    return ari,nmi,ami,homogeneity,completeness,vscore,fmi,(end - start), tt
+
+
+
+'''
+    Run the analysis on output labels and ground truths
+'''
+def runAnalysis(argsdict,lbls,inputs,outPathRaw,sigColsPath, tt):
+    start = time.time()
+    
+    sigCols = readDataFromFile(sigColsPath, 'float')
+    lbls = readDataFromFile(lbls,'int')
+    inputs = readDataFromFile(inputs,'int')
+    
+    cRaw = ''
+    zf = []
+    
+    #mapping = mapIdstoInput(lbls, inputs)
+    mapping = {}
+    ari,nmi,ami,homogeneity,completeness,vscore,fmi = calcCentroidMetrics(lbls,inputs,mapping)
+    generateChart(sigCols, lbls, inputs, mapping)
+    #showPlots()
+    
+    outputFiles(argsdict, outPathRaw,cRaw)
+    charts = argsdict['charts'][0]
+    if charts == 'all' or charts == 'show':
+        showPlots()
+    end = time.time()
+    return ari,nmi,ami,homogeneity,completeness,vscore,fmi,(end - start), tt
 
 
 '''****************************************'''
@@ -157,7 +176,7 @@ if __name__ == "__main__":
         lblPathRaw = sys.argv[1]
         inputPathRaw = sys.argv[2]
         
-        lbls = readDataFromFile(lblPathRaw)
+        lbls = readDataFromFile(lblPathRaw, 'float')
         input = readInputFromFile(inputPathRaw)
         
         

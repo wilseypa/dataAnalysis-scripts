@@ -9,7 +9,7 @@
     **General Options**
         -exec (default all)    -Determine what programs to use for analysis
                                 'all' - use RPHash and LSHKit (see req's)
-                                    'rphash', 'lshkit', 'none')
+                                    'rphash', 'lshkit', 'sklearn', 'none')
     
         -infile (default null)    -File for input data generation
     
@@ -58,6 +58,7 @@
 from DataGenerator import *
 from RPTestSeq import *
 from LSHKitSeq import *
+from ScikitSeqs import *
 from utils import *
 import sys
 import os
@@ -91,14 +92,10 @@ Notes:
 def runMultiRun(argsdict, foName, fName, runs, runTag):
     #Check if runtype = rphash/lshkit/all/none
     
-    
     #Check for necessary files of each
-    if not os.path.exists('./RPHash.jar'):
-        print "Missing RPHash.jar from root directory - copy before running generator"
-        return
-    if not os.path.exists('./LabelData.jar'):
-        print "Missing LabelData.jar from root directory - copy before running generator"
-        return
+    if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash"):
+        if not checkRPFiles():
+            return
     
     #Create a folder for the current test
     if not os.path.exists('./' + foName + '/'):
@@ -108,7 +105,7 @@ def runMultiRun(argsdict, foName, fName, runs, runTag):
     outFN = './' + foName + '/Results_' + fName + '_' + str(datetime.date.today()).replace(' ','_') + '.csv'
     
     outfile = file(outFN, 'w')
-    outfile.write('Run,fileN,GenTime,RPTime,AnalysisTime,Purity,Time,MemKB,WCSSE\n')
+    outfile.write('Run,fileN,GenTime,ClusteringTime,AnalysisTime,ARI,NMI,AMI,Homogeneity,Completeness,Vscore,FMI\n')
     outfile.close()
     
     
@@ -125,10 +122,13 @@ def runMultiRun(argsdict, foName, fName, runs, runTag):
         if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "lshkit"):
             # Run LSHKIT
             runLSHKit(fPath, fileN)
+        
+        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "sklearn" or argsdict["exec"][0] == "cluster"):
+            runSciKitSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
         fileN += '_RAW'
         
         
-        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash"):
+        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash" or argsdict["exec"][0] == "cluster"):
             # Run RPHash
             runRPSeq(argsdict, fPath, fileN, fName, i, outFN, runTag,foName,GenTime)
         

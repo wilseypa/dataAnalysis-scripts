@@ -10,6 +10,8 @@
         -exec (default all)    -Determine what programs to use for analysis
                                 'all' - use RPHash and LSHKit (see req's)
                                     'rphash', 'lshkit', 'none'
+                                    'cluster': rphash + sklearn
+                                    'LSH': rphash + lshkit
     
         -infile (default null)    -File for input data generation
     
@@ -73,7 +75,7 @@ def dimensionTest(argsDict, foName):
     
     for i in range(0, 20):
         argsDict['dim'] = [(20-i) * 50]
-        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 2, 'DIM='+str(argsDict['dim'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 5, 'DIM='+str(argsDict['dim'][0]))
         results = aggResults(argsDict, foName, results, i)
 
     outfile = file('./' + foName + '/RESULTS_DIMTEST.csv', 'w')
@@ -93,7 +95,7 @@ def overlapTest(argsDict, foName):
         os.mkdir('./' + foName + '/')
     
     for i in range(0, 10):
-        argsDict['cdist'] = [.5 * (10-i)]
+        argsDict['cdist'] = [.5 * (i + 1)]
         runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 5, 'CDIST='+str(argsDict['cdist'][0]))
         results = aggResults(argsDict, foName, results, i)
 
@@ -172,6 +174,10 @@ if __name__ == "__main__":
             dimensionTest(argsdict,foName)
         if testType == 'col' or testType == 'colNoise':
             colNoiseTest(argsdict, foName)
+            
+    else:
+        print "Requires [testType] [outputFolder] [Option=<...>]\n\tSee TestSeqs.py for options and information"
+
         
 '''****************************************'''
     

@@ -12,7 +12,7 @@ def argsDefault(argsDict):
     if not 'maxValue' in argsDict:  #DEFAULT .999
         argsDict['maxValue'] = [.999]
     if not 'scaling' in argsDict:  #DEFAULT 'true'
-        argsDict['scaling'] = ['true']
+        argsDict['scaling'] = ['false']
     if not 'clusters' in argsDict:  #DEFAULT 3
         argsDict['clusters'] = [3]
     if not 'dim' in argsDict:  #DEFAULT 100
@@ -42,7 +42,24 @@ def argsDefault(argsDict):
     if not 'ext' in argsDict:  #DEFAULT 'all'
         argsDict['ext'] = ['all']
     if not 'exec' in argsDict:  #DEFAULT 'all'
-        argsDict['exec'] = ['all']
+        argsDict['exec'] = ['cluster']
+        
+    ''' DEFAULTS RPHash Params'''
+    
+    if not 'parallel' in argsDict:  #DEFAULT 'true'
+        argsDict['parallel'] = ['true']
+    if not 'decodertype' in argsDict:  #DEFAULT 'none'
+        argsDict['decodertype'] = ['adaptive']
+    if not 'numprojections' in argsDict:  #DEFAULT 0
+        argsDict['numprojections'] = [0]
+    if not 'numblur' in argsDict:  #DEFAULT 0
+        argsDict['numblur'] = [0]
+    if not 'runs' in argsDict:  #DEFAULT 1
+        argsDict['runs'] = [1]
+    if not 'clusteringmethod' in argsDict:  #DEFAULT 'adaptive'
+        argsDict['clusteringmethod'] = ['adaptive']
+    if not 'offlineclusterer' in argsDict:  #DEFAULT 'none'
+        argsDict['offlineclusterer'] = ['none']
     
     return argsDict
 
@@ -56,22 +73,23 @@ def generateChart(data, lbls, input, mapping):
     match = {}
     inC = {}
     
-    for i in xrange(len(input)):
-        if int(input[i]) < len(mapping):
-            inC[i] = int(mapping[int(input[i])])
-            if int(lbls[i]) == int(mapping[int(input[i])]):
-                match[i] = 0;
+    if len(mapping) >0:  
+        for i in xrange(len(input)):
+            if int(input[i]) < len(mapping):
+                inC[i] = int(mapping[int(input[i])])
+                if int(lbls[i]) == int(mapping[int(input[i])]):
+                    match[i] = 0;
+                else:
+                    match[i]=1
             else:
-                match[i]=1
-        else:
-            inC[i] = int(input[i])
-            match[i] = 1;
-    cents = []
-    clearPlots()
-    simplePlot((x[0] for x in data), (x[1] for x in data),inC,cents, match);
-    r3DPlot((x[0] for x in data), (x[1] for x in data),(x[2] for x in data), inC,222,cents, match);
-    r3DPlot((x[3] for x in data), (x[4] for x in data),(x[5] for x in data), inC,224,cents, match);
-    eucPlot(data, inC,cents, match)
+                inC[i] = int(input[i])
+                match[i] = 1;
+        cents = []
+        clearPlots()
+        simplePlot((x[0] for x in data), (x[1] for x in data),inC,cents, match);
+        r3DPlot((x[0] for x in data), (x[1] for x in data),(x[2] for x in data), inC,222,cents, match);
+        r3DPlot((x[3] for x in data), (x[4] for x in data),(x[5] for x in data), inC,224,cents, match);
+        eucPlot(data, inC,cents, match)
     
     return
 
