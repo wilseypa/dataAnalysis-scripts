@@ -48,6 +48,12 @@
                                         performs a shuffle on the columns
         -noise (default 0%) (0-1)  -TODO Amount of noise to add to final output
     ____________________________________
+    
+    **Cluster Evolution Options** (IN PROGRESS)
+        -evolve (default false) (true, false) -Turn on cluster evolution
+        -evint (default 250) -interval to change clusters on
+        -evtype (default random) -evolution type (random, *shift - *NOT IMPLEMENTED
+    ____________________________________
 
 ```****************************************'''
 
@@ -91,8 +97,10 @@ def generateData(argsDict):
     data, ids, cents = genRawData(argsDict)
     clearPlots()
     simplePlot((x[0] for x in data), (x[1] for x in data),ids,cents,{});
-    r3DPlot((x[0] for x in data), (x[1] for x in data),(x[2] for x in data), ids,222,cents,{});
-    r3DPlot((x[3] for x in data), (x[4] for x in data),(x[5] for x in data), ids,224,cents,{});
+    if(argsDict['dim'][0] >= 3):
+        r3DPlot((x[0] for x in data), (x[1] for x in data),(x[2] for x in data), ids,222,cents,{});
+    if(argsDict['dim'][0] >= 6):
+        r3DPlot((x[3] for x in data), (x[4] for x in data),(x[5] for x in data), ids,224,cents,{});
     eucPlot(data, ids,cents,{})
     
     sigCols = data

@@ -12,13 +12,13 @@ def argsDefault(argsDict):
     if not 'maxValue' in argsDict:  #DEFAULT .999
         argsDict['maxValue'] = [.999]
     if not 'scaling' in argsDict:  #DEFAULT 'true'
-        argsDict['scaling'] = ['false']
+        argsDict['scaling'] = ['true']
     if not 'clusters' in argsDict:  #DEFAULT 3
         argsDict['clusters'] = [3]
     if not 'dim' in argsDict:  #DEFAULT 100
         argsDict['dim'] = [100]
-    if not 'vectors' in argsDict:  #DEFAULT 1000
-        argsDict['vectors'] = [1000]
+    if not 'vectors' in argsDict:  #DEFAULT 500
+        argsDict['vectors'] = [500]
     if not 'dist' in argsDict:  #DEFAULT 'gauss'
         argsDict['dist'] = ['gauss']
     if not 'cdist' in argsDict:  #DEFAULT .4
@@ -38,11 +38,18 @@ def argsDefault(argsDict):
     if not 'ccounts' in argsDict:  #DEFAULT 'random'
         argsDict['ccounts'] = ['random']
     if not 'noise' in argsDict:  #DEFAULT 0
-        argsDict['noise'] = [0]
+        argsDict['noise'] = [.10]
     if not 'ext' in argsDict:  #DEFAULT 'all'
         argsDict['ext'] = ['all']
     if not 'exec' in argsDict:  #DEFAULT 'all'
         argsDict['exec'] = ['cluster']
+    if not 'evolve' in argsDict:  #DEFAULT 'all'
+        argsDict['evolve'] = ['false']
+    if not 'evint' in argsDict:  #DEFAULT 'all'
+        argsDict['evint'] = [50]
+    if not 'evtype' in argsDict:  #DEFAULT 'all'
+        argsDict['evtype'] = ['random']
+        
         
     ''' DEFAULTS RPHash Params'''
     
@@ -60,6 +67,9 @@ def argsDefault(argsDict):
         argsDict['clusteringmethod'] = ['adaptive']
     if not 'offlineclusterer' in argsDict:  #DEFAULT 'none'
         argsDict['offlineclusterer'] = ['none']
+        
+    if not 'param' in argsDict:
+        argsDict['param'] = ['vectors']
     
     return argsDict
 

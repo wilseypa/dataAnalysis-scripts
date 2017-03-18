@@ -1,6 +1,8 @@
 import sys
 import numpy as np
 from random import *
+from math import ceil
+from sklearn.preprocessing import MinMaxScaler
 
 '''************** AUTHOR NICK *************'''
 
@@ -12,6 +14,7 @@ from random import *
 def genRawData(argsDict):
     zf = []
     centsF = []
+    ids = []
 
     ''' Parse arguments of dictionary '''
     minValue = float(argsDict['minValue'][0])
@@ -23,19 +26,55 @@ def genRawData(argsDict):
     cdist = float(argsDict["cdist"][0])
     csigma = float(argsDict["csigma"][0])
     scaling = argsDict["scaling"][0]
+    
 
-    ids = idClusters(argsDict, clusters, vectors)
    
     for dim in range(0, dimensions):
-        z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma)
-        if(scaling == 'true'):
-            z = scaleRawData(argsDict, z, minValue, maxValue);
-        if(zf == []):
-            zf = z
-            centsF = cents
+        if(argsDict["evolve"][0] == 'true'): #IN PROGRESS
+            zt = []
+            centstF = []
+            for i in range(0, int(ceil(vectors /int(argsDict["evint"][0])))):
+                if(i == int(ceil(vectors/int(argsDict["evint"][0])))-1):
+                    if(vectors%int(argsDict["evint"][0]) == 0):
+                        ids = idClusters(argsDict, clusters, int(argsDict["evint"][0]))
+                    else:
+                        ids = idClusters(argsDict, clusters, vectors%int(argsDict["evint"][0]))
+                else:
+                    ids = idClusters(argsDict, clusters, vectors)
+                z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma)
+                z = genSparseVects(argsDict, z)
+        
+                if(zt == []):
+                    zt = z
+                    centstF = cents
+                else:
+                    zt = np.vstack((zt.flatten(), z.flatten()))
+                    centstF = np.vstack((centstF.flatten(), cents.flatten))
+                    
+            print zt
+            if(zf == []):
+                zf = zt
+                centsF = centstF
+            else:
+                zf = np.append(zf, zt, 1)
+                centsF = np.column_stack((centsF, centstF))        
+                    
         else:
-            zf = np.append(zf, z, 1)
-            centsF = np.column_stack((centsF, cents))
+            
+            ids = idClusters(argsDict, clusters, vectors)
+            z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma)
+            z = genSparseVects(argsDict, z)
+            
+            if(zf == []):
+                zf = z
+                centsF = cents
+            else:
+                zf = np.append(zf, z, 1)
+                centsF = np.column_stack((centsF, cents))
+            
+            
+    if(scaling == 'true'):
+        z = scaleRawData(argsDict, z, minValue, maxValue);
     return zf, ids, centsF
 
 
@@ -46,7 +85,7 @@ def idClusters(argsDict, clusters, vectors):
     retIds = []
     ccounts = argsDict["ccounts"][0]
     
-    if ccounts == 'equal' or ccounts == 'ranom':
+    if ccounts == 'equal':
         for i in range(0, int(clusters)):
             z = np.array([i for t in range(0, vectors/clusters)])
             
@@ -82,11 +121,18 @@ def idClusters(argsDict, clusters, vectors):
 def genDummyCols(argsDict, data):
     dummyCols = int(argsDict['dummyCols'][0])
     vectors = len(data)
-    z = np.random.uniform(0,1,[vectors, dummyCols]);
+    z = np.random.uniform(0,0,[vectors, dummyCols]);
     data = np.append(data, z, 1)
 
     return data
 
+def genSparseVects(argsDict,data):
+    for i in xrange(int(float(argsDict["noise"][0]) * len(data))):
+        target = np.random.randint(0,len(data));
+        data[target] = np.random.uniform(float(argsDict["minValue"][0]),float(argsDict["maxValue"][0]));
+        
+    return data
+    
 
 '''
     Generates centroids for clusters generation mean
@@ -242,12 +288,13 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
         TODO: Make this scale edges better
 '''
 def scaleRawData(argsDict, z, minValue, maxValue):
+    mins = np.min(z)
+    maxs = np.max(z)
     
+    rng = maxs - mins
     #Normalize
-    z = (z-z.min())/float(z.max() - z.min())
+    z = maxValue - (((maxValue - minValue) * (maxs - z)) / rng)
 
-    #Re-Scale
-    z = minValue + z* (maxValue - minValue)
     return z
 
 '''****************************************'''

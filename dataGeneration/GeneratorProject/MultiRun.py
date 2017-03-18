@@ -7,11 +7,13 @@
 '''*************** OPTIONS ****************
 
     **General Options**
-        -exec (default all)    -Determine what programs to use for analysis
-                                'all' - use RPHash and LSHKit (see req's)
-                                    'rphash', 'lshkit', 'sklearn', 'none')
-    
-        -infile (default null)    -File for input data generation
+        -exec (default all)    -Determine what algorithms to run against generated dataset
+                                'all' - use RPHash, sklearn, and LSHKit (see req's in readme)
+                                'rphash' 
+                                'lshkit' 
+                                'cluster': rphash + sklearn
+                                'LSH': rphash + lshkit
+                                'none'
     
         -scaling (default true)     -Toggle scaling of generated data
         -minValue (default -.999)    -Max value of output data
@@ -21,7 +23,7 @@
         -dummyCols (default 50) -Number of uncorrelated columns to generate
         
         -clusters (default 3)    -Number of clusters to generate
-        -vectors (default 1000)    -Number of vectors to generate
+        -vectors (default 5)    -Number of vectors to generate
 
         -charts (default pdf)     -Generated chart format (save, show, none, all, png, pdf)
     ____________________________________
@@ -60,6 +62,7 @@ from RPTestSeq import *
 from LSHKitSeq import *
 from ScikitSeqs import *
 from utils import *
+from RecursLSHTestSeq import *
 import sys
 import os
 import datetime
@@ -67,28 +70,15 @@ import numpy as np
 import subprocess
 import time
 
-'''
-Notes:
-    -Data generator for testing algorithms
-        -Specifically focused on the LSH algorithms
-            -Comparative analysis of old LSH v. new LSH
-            -Significance of LSH operation on the data sets
-    -Based off of 'generate-from-labelled-dataset.py'
-
-    -Generates data column by column
-        -Significant columns are generated using centroids
-        -Nonsignificant columns are uniformly distributed
-
-    -Outputs generated data to folder
-        -Raw data (no labels)
-        -Labeled data
-        -Graph Output (Pdf/Png)
-        -Configuration output
-
-'''
-
 '''************** AUTHOR NICK *************'''
 
+
+'''
+    MultiRun creates folder directories and output data for multiple runs
+        Use the 'exec' argument to control the specific algorithms that are executed
+        Each algorithm is run once on the same data set to get a perspective
+            of how each performs
+'''
 def runMultiRun(argsdict, foName, fName, runs, runTag):
     #Check if runtype = rphash/lshkit/all/none
     
@@ -105,9 +95,8 @@ def runMultiRun(argsdict, foName, fName, runs, runTag):
     outFN = './' + foName + '/Results_' + fName + '_' + str(datetime.date.today()).replace(' ','_') + '.csv'
     
     outfile = file(outFN, 'w')
-    outfile.write('Run,fileN,GenTime,ClusteringTime,AnalysisTime,ARI,NMI,AMI,Homogeneity,Completeness,Vscore,FMI\n')
+    outfile.write('Run,' + str(argsdict["param"][0]) + ',fileN,GenTime,ClusteringTime,AnalysisTime,ARI,NMI,AMI,Homogeneity,Completeness,Vscore,FMI,Time,MemKB,WCSSE\n')
     outfile.close()
-    
     
     #For Runs...
     for i in xrange(runs):       
@@ -115,7 +104,6 @@ def runMultiRun(argsdict, foName, fName, runs, runTag):
         
         # 1) Generate files for RPHash, LSHkit
         GenTime = runGenerator(foName, fName + str(i), argsdict)
-        
         fPath = './' + foName + '/' + fName + str(i) + '/'
         fileN = fPath + fName + str(i)
                
@@ -125,12 +113,19 @@ def runMultiRun(argsdict, foName, fName, runs, runTag):
         
         if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "sklearn" or argsdict["exec"][0] == "cluster"):
             runSciKitSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
+        
+        if(argsdict["exec"][0] == "size"):
+            runSizeAnalysis(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
+            
+        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "pylsh" or argsdict["exec"][0] == "cluster" or argsdict["exec"][0] == "size"):
+            runRecursLSHSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
+            
         fileN += '_RAW'
         
-        
-        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash" or argsdict["exec"][0] == "cluster"):
+        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash" or argsdict["exec"][0] == "cluster" or argsdict["exec"][0] == "size"):
             # Run RPHash
             runRPSeq(argsdict, fPath, fileN, fName, i, outFN, runTag,foName,GenTime)
+        
         
     return
     
@@ -141,12 +136,10 @@ def runMultiRun(argsdict, foName, fName, runs, runTag):
 
 '''****************************************'''
 
-
 '''
 Main
-    -Check if an input file exists
-        -if so, use input file to generate the output data
-        -if not, use internal method to generate the output data
+    -Read in the args dictionary - this gets passed to the generator
+    -Create folders and filenames and run MultiRun
 '''
 if __name__ == "__main__":
     

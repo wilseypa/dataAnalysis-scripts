@@ -14,16 +14,11 @@ def checkRPFiles():
         return False
     return True
     
-def defaultRPParams(argsDict):
-    
-    
-    return argsDict
 
 
 def runRPjava(argsdict,testPath,fName):
     numClusters = int(argsdict['clusters'][0])
     start = time.time()
-    print fName
     returnCode = subprocess.call("java -jar ./RPHash.jar " + fName + " " + str(numClusters) + " " 
         + fName + "RPOut " + argsdict['clusteringmethod'][0] + " numblur=" + str(argsdict['numblur'][0])
         + " offlineclusterer=" + argsdict['offlineclusterer'][0] + " runs=" + str(argsdict['runs'][0])
@@ -59,7 +54,7 @@ def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, Ge
         fileN = fileN + 'RPOut.RPHashAdaptive2Pass'
         rc = runLabeler(testPath, fileN, dataN)
         
-        if(rc == 0):
+        if(rc == 0 or argsdict['exec'][0] == "size"):
             inP = fileN+".labeled"
             lblN = rootPath + fName + str(i) + '_LBLONLY.csv'
             sigCol = rootPath + '/' + fName + str(i) + '_SIG.csv'
@@ -67,9 +62,9 @@ def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, Ge
             ari,nmi,ami,homogeneity,completeness,vscore,fmi,aTime,tt = runAnalysis(argsdict, lblN, inP, outFN, sigCol, 1)
             
             outfile = file(outFN, 'a')
-            outfile.write(runTag + ',' + testPath + str(i) + ',' + str(GenTime) + ',' + str(RPTime) + ',' + str(aTime)
+            outfile.write(runTag + ','  + str(argsdict[argsdict['param'][0]][0]) + ',' + testPath + str(i) + ',' + str(GenTime) + ',' + str(RPTime) + ',' + str(aTime)
                           + ',' + str(ari) + ',' + str(nmi) + ',' + str(ami) + ',' + str(homogeneity)  
-                          + ',' + str(completeness) + ',' + str(vscore) + ',' + str(fmi) + '\n')
+                          + ',' + str(completeness) + ',' + str(vscore) + ',' + str(fmi) + ',' + str(rpMetrics) + '\n')
             outfile.close()
         else:
             print str(i) + ": Labeler Returned 1, skipping analysis"
@@ -78,14 +73,10 @@ def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, Ge
     return
 
 
-def runRPSeq(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, GenTime):
-    argsdict = defaultRPParams(argsdict)
-    
-    for z in range(0,16):
-        argsdict['numprojections'] = [z%4]
-        runTag = argsdict['clusteringmethod'][0] + " - proj: " + str(z)
+def runRPSeq(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, GenTime):   
+    runTag = argsdict['clusteringmethod'][0]
         
-        runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, GenTime)
+    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, GenTime)
     
     return
     

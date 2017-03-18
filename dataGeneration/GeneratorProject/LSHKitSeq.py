@@ -151,11 +151,11 @@ def runLSHKit(fPath, fName):
     returnCode, timest, bench = runScan(fName,outFiles)
     
     returnCode,timest = runMplsh(fName, bench, outFiles)
-    #returnCode,timest = runApost(fName, bench, outFiles)
-    #returnCode,timest = runForest(fName, bench, outFiles)
+    returnCode,timest = runApost(fName, bench, outFiles)
+    returnCode,timest = runForest(fName, bench, outFiles)
     
-    #returnCode,timest = runSpectral(fName, bench, outFiles)
-    #returnCode,timest = runLSH(fName, bench, outFiles)
+    returnCode,timest = runSpectral(fName, bench, outFiles)
+    returnCode,timest = runLSH(fName, bench, outFiles)
     
     
     #TODO: Aggregate Results into one file

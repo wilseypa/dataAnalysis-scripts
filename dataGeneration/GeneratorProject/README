@@ -1,3 +1,5 @@
+![DataGeneratorSystem](Images/DataGeneratorSystem.jpg?raw=true "System Diagram of Data Generator and Testing")
+
 REQUIREMENTS: 
 	-MatPlotLib for distribution plotting
 		-http://matplotlib.org/faq/installing_faq.html
@@ -12,6 +14,8 @@ REQUIREMENTS:
 			  
 	-Updated RPHash.jar and Labeler.jar in root of GeneratorProject
 		(from RPHash repository)
+		
+	-If using LSHKit, must build from source and copy Tool binaries to <root>/LSHKitBin/...
 			  
 '''*************** RUNNING ****************
 
@@ -38,13 +42,12 @@ Test Sequences with Analysis:
 
     -Data generator for testing algorithms
 	-Specifically focused on the LSH algorithms
-    	    -Comparative analysis of old LSH v. new LSH
 	    -Significance of LSH operation on the data sets
     -Based off of 'generate-from-labelled-dataset.py'
 
     -Generates data column by column
 	-Significant columns are generated using centroids
-	-Nonsignificant columns are uniformly distributed
+	-Non-significant columns are uniformly distributed (Noise)
 
     -Outputs generated data to folder
 	    -Raw data (no labels)

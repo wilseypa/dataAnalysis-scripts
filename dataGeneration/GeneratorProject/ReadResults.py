@@ -88,7 +88,7 @@ def outputFiles(argsDict, fPathRaw, cRaw):
         
     charts = argsDict['charts'][0]
         
-    outfile = file(fPathRaw,'w')
+    #outfile = file(fPathRaw,'w')
     #outfile.write(str(len(ids)) + '\n')
     #Output Labeled
     #for i in xrange(len(ids)):
