@@ -1,6 +1,9 @@
-![DataGeneratorSystem](Images/DataGeneratorSystem.jpg?raw=true "System Diagram of Data Generator and Testing")
+![DataGeneratorSystem](Images/DataGeneratorSystem.jpeg?raw=true "System Diagram of Data Generator and Testing")
 
-REQUIREMENTS: 
+
+
+************** REQUIREMENTS *************** 
+	
 	-MatPlotLib for distribution plotting
 		-http://matplotlib.org/faq/installing_faq.html
                 
@@ -17,7 +20,7 @@ REQUIREMENTS:
 		
 	-If using LSHKit, must build from source and copy Tool binaries to <root>/LSHKitBin/...
 			  
-'''*************** RUNNING ****************
+*************** RUNNING ****************
 
 Standard Data Generator:
 
@@ -38,7 +41,7 @@ Test Sequences with Analysis:
 	##	python TestSeqs.py [testType] [outputFolder] [option=value]
 	##	python TestSeqs.py overlap overlapTestFiles vectors=10000 dim=1000
 
-'''***************  NOTES  ****************
+***************  NOTES  ****************
 
     -Data generator for testing algorithms
 	-Specifically focused on the LSH algorithms
@@ -56,7 +59,7 @@ Test Sequences with Analysis:
 	    -Configuration output
 
 
-'''*************** OPTIONS ****************
+*************** OPTIONS ****************
 
     **General Options**
         -infile (default null)	-File for input data generation
@@ -100,5 +103,3 @@ Test Sequences with Analysis:
                                         performs a shuffle on the columns
         -noise (default 0%) (0-1)  -TODO Amount of noise to add to final output
     ____________________________________
-
-```****************************************'''
