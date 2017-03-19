@@ -38,16 +38,16 @@ def argsDefault(argsDict):
     if not 'ccounts' in argsDict:  #DEFAULT 'random'
         argsDict['ccounts'] = ['random']
     if not 'noise' in argsDict:  #DEFAULT 0
-        argsDict['noise'] = [.10]
+        argsDict['noise'] = [.00]
     if not 'ext' in argsDict:  #DEFAULT 'all'
         argsDict['ext'] = ['all']
-    if not 'exec' in argsDict:  #DEFAULT 'all'
+    if not 'exec' in argsDict:  #DEFAULT 'cluster'
         argsDict['exec'] = ['cluster']
-    if not 'evolve' in argsDict:  #DEFAULT 'all'
+    if not 'evolve' in argsDict:  #DEFAULT 'false'
         argsDict['evolve'] = ['false']
-    if not 'evint' in argsDict:  #DEFAULT 'all'
+    if not 'evint' in argsDict:  #DEFAULT 50
         argsDict['evint'] = [50]
-    if not 'evtype' in argsDict:  #DEFAULT 'all'
+    if not 'evtype' in argsDict:  #DEFAULT 'random'
         argsDict['evtype'] = ['random']
         
         

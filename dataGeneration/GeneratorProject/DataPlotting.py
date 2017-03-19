@@ -41,12 +41,12 @@ def r3DPlot(xTestPts, yTestPts, zTestPts, ids, pos, cents, match):
 
     markers = ['o','x']
 
-    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
+    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k']
     for i in range(0, len(x_val)):
         if(match == {}):
-            ax.scatter(x_val[i], y_val[i],z_val[i],c=colors[ids[i]],s=0.5)
+            ax.scatter(x_val[i], y_val[i],z_val[i],c=colors[ids[i]%len(colors)],s=0.5)
         else:
-            ax.scatter(x_val[i], y_val[i],z_val[i],marker=markers[match[i]],c=colors[ids[i]],s=0.5)
+            ax.scatter(x_val[i], y_val[i],z_val[i],marker=markers[match[i]],c=colors[ids[i]%len(colors)],s=0.5)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
@@ -61,16 +61,16 @@ def simplePlot(xTestPts, yTestPts, ids, cents, match):
     
 
     markers = ['o','x']
-    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
+    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k']
 
     plt.figure(1)
     plt.subplot(221)
     
     for i in range(0, len(x_val)):
         if (match == {}):
-            plt.scatter(x_val[i], y_val[i], c=colors[ids[i]],s=1)
+            plt.scatter(x_val[i], y_val[i], c=colors[ids[i]%len(colors)],s=1)
         else:
-            plt.scatter(x_val[i], y_val[i],marker=markers[match[i]],c=colors[ids[i]],s=1)
+            plt.scatter(x_val[i], y_val[i],marker=markers[match[i]],c=colors[ids[i]%len(colors)],s=1)
 
     #minx, maxx = checkPlotBoundaries(x_val, minx, maxx)
     #miny, maxy = checkPlotBoundaries(y_val, miny, maxy)
@@ -86,7 +86,7 @@ def simplePlot(xTestPts, yTestPts, ids, cents, match):
 def eucPlot(testPts,ids,cents, match):
     x_val = []
     markers = ['o','x']
-    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k', 'ro']
+    colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k']
     for row in testPts:
         x_val.append([np.linalg.norm(row)])
     plt.figure(1)
@@ -94,9 +94,9 @@ def eucPlot(testPts,ids,cents, match):
 
     for i in range(0, len(x_val)):
         if(match == {}):
-            plt.scatter(ids[i],x_val[i], c=colors[ids[i]],s=3)
+            plt.scatter(ids[i],x_val[i], c=colors[ids[i]%len(colors)],s=3)
         else:
-            plt.scatter(ids[i], x_val[i],marker=markers[match[i]],c=colors[ids[i]], s=3)
+            plt.scatter(ids[i], x_val[i],marker=markers[match[i]],c=colors[ids[i]%len(colors)], s=3)
 
     plt.grid(True, which='both')
     return

@@ -27,7 +27,8 @@ def genRawData(argsDict):
     csigma = float(argsDict["csigma"][0])
     scaling = argsDict["scaling"][0]
     
-
+    
+    ids = idClusters(argsDict, clusters, vectors)
    
     for dim in range(0, dimensions):
         if(argsDict["evolve"][0] == 'true'): #IN PROGRESS
@@ -61,7 +62,6 @@ def genRawData(argsDict):
                     
         else:
             
-            ids = idClusters(argsDict, clusters, vectors)
             z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma)
             z = genSparseVects(argsDict, z)
             
@@ -236,7 +236,7 @@ def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csi
     cents = genCentroids(argsDict, clusters, minValue, maxValue)
     zf = []
     bc = np.bincount(ids)    
-
+    
     if dist == "gauss" or dist == "normal" or dist == "norm" or dist == "gaussian":
         for r in range(0, clusters):
             z = np.random.randn(bc[r], 1)
