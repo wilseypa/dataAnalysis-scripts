@@ -14,14 +14,23 @@
         -maxValue (default .999)	-Min value of output data
         
         -dim (default 100)	    -Number of significant columns to generate
-        -dummyCols (default 50) -Number of uncorrelated columns to generate
         
         -clusters (default 3)	-Number of clusters to generate
         -vectors (default 1000)	-Number of vectors to generate
 
         -charts (default pdf) 	-Generated chart format (save, show, none, all, png, pdf)
+        
     ____________________________________
-
+    
+    **Noise Options**
+    
+        -dummyCols (default 50) -Number of uncorrelated columns to generate
+        
+        -noise (default 0.0) -Percent of sparseness per feature (randomly generated)
+        
+        -vectornoise (default 0.0) -Percent of noise vectors to generate
+    ___________________________________
+    
     **Generation Distribution Options**
         -dist (default gauss)	-Distribution to generate points on
             -gauss or normal        -Generate points on gaussian distribution
@@ -46,7 +55,6 @@
                                         columns stacked on low indexed features and dummy columns on 
                                         high indexed features; intermixed disperses evenly; random
                                         performs a shuffle on the columns
-        -noise (default 0%) (0-1)  -TODO Amount of noise to add to final output
     ____________________________________
     
     **Cluster Evolution Options** (IN PROGRESS)

@@ -4,6 +4,7 @@
 from Project import *
 import operator
 from random import choice
+from numpy import *
 class RecLSH():
 
     def __init__(self,projector=None):
@@ -50,8 +51,8 @@ class RecLSH():
         for i in xrange(1,len(X)):
             for j in xrange(len(X[i])): ret[j]+=X[i][j]
         for j in  xrange(len(ret)):ret[j]= ret[j]/float(len(X))
-
         return ret
+
 
     def findDensityModes(self,X,k,l):
         '''
@@ -69,24 +70,72 @@ class RecLSH():
 
         densityAndID = {}
         for cur_id in sort(self.IDAndCount.keys())[2:]:
-            densityAndID = self.TwoTimesParentMetric(cur_id,densityAndID)
+            densityAndID = self.cosineDiff(cur_id,densityAndID)
+            #densityAndID = self.diffVariance(cur_id,densityAndID)
+            #densityAndID = self.equalSiblingsMetric(cur_id,densityAndID)
+            #densityAndID = self.TwoTimesParentMetric(cur_id,densityAndID)
 
         # sort by counts
         densityAndIDList = sorted(densityAndID.items(), key=operator.itemgetter(1),reverse=True)
+        densityAndIDList = filter(lambda x: x[0]!=-1,densityAndIDList)
+
         # compute medoids
         estcentsmap = {}
-        for d in densityAndIDList[:int(k*2)]:
+        for d in densityAndIDList[:int(k)]:
             idcent = d[0]
             estcentsmap[idcent] = self.medoid(self.IDAndCent[idcent])
             #print bin(idcent),len(bin(idcent))-2,d[1]
 
-
-        return self.offlineClusteringMerge(estcentsmap,k,densityAndIDList)
+        return estcentsmap.values()#self.offlineClusteringMerge(estcentsmap,k,densityAndIDList)
 
 
     ### Options ###
 
     #vvv Various metrics for deciding whether to split a node into two clusters or not vvv#
+    def diffVariance(self,cur_id, densityAndID):
+        cur_count = var(self.IDAndCent[cur_id])
+        parent_id = cur_id>>1
+
+        parent_count = 0
+        if self.IDAndCent.has_key(parent_id):
+            parent_count = var(self.IDAndCent[parent_id])
+
+        sibling_id = cur_id^1
+
+        if cur_count <= parent_count:
+            densityAndID[parent_id] = None
+            densityAndID[cur_id] = self.IDAndCount[cur_id]
+        return densityAndID
+
+    import math
+    def cosine_similarity(self,v1,v2):
+        "compute cosine similarity of v1 to v2: (v1 dot v2)/{||v1||*||v2||)"
+        sumxx, sumxy, sumyy = 0, 0, 0
+        for i in range(len(v1)):
+            x = v1[i]; y = v2[i]
+            sumxx += x*x
+            sumyy += y*y
+            sumxy += x*y
+        return sumxy/math.sqrt(sumxx*sumyy)
+
+
+    def cosineDiff(self,cur_id, densityAndID):
+        cur_count = self.medoid(self.IDAndCent[cur_id])
+        parent_id = cur_id>>1
+        sibling_id = cur_id^1
+
+        if self.IDAndCent.has_key(sibling_id):
+            sib_count = self.medoid(self.IDAndCent[sibling_id])
+            if self.cosine_similarity(cur_count , sib_count) > 0:
+                densityAndID[parent_id] = None
+                densityAndID[cur_id] = self.IDAndCount[cur_id]
+        else:
+            densityAndID[parent_id] = None
+            densityAndID[cur_id] = self.IDAndCount[cur_id]
+
+        return densityAndID
+
+
     def equalSiblingsMetric(self,cur_id, densityAndID):
         '''
             what do we know about these numbers
@@ -102,7 +151,6 @@ class RecLSH():
         parent_id = cur_id>>1
         parent_count = self.IDAndCount[parent_id]
         sibling_id = cur_id^1
-
 
         if parent_count==cur_count:
         # no sibling, consume parent, child0 has all density
@@ -181,8 +229,6 @@ class RecLSH():
         counts = [ct[1] for ct in counts[:len(estcentsmap)]]
         return agglomerative.agglomerate(estcentsmap.values(),k,counts)[0]
 #^^^ Heuristics for merging oversampled clusters ^^^#
-    
-    
     
     '''************** AUTHOR NICK *************'''
     

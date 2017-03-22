@@ -59,6 +59,7 @@
 
 from MultiRun import *
 import glob
+from copy import deepcopy
 from itertools import islice
 
 
@@ -72,6 +73,7 @@ def dimensionTest(argsDict, foName):
     argsDict['dummyCols'] = [0]
     argsDict['vectors'] = [500]
     argsdict['param']=['dim']
+    multirun = int(argsDict['multirun'][0])
     
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
@@ -79,7 +81,7 @@ def dimensionTest(argsDict, foName):
     #Jump in 5's until 50
     for i in range(1,11):
         argsDict['dim'] = [i * 5]
-        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 2, 'DIM='+str(argsDict['dim'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 'DIM='+str(argsDict['dim'][0]))
         results = aggResults(argsDict, foName, results, i)
         
     outfile = file('./' + foName + '/RESULTS_DIMTEST.csv', 'w')
@@ -89,17 +91,17 @@ def dimensionTest(argsDict, foName):
     #Jump in 50's until 1000
     for i in range(1, 21):
         argsDict['dim'] = [i * 50]
-        runMultiRun(argsDict, foName + '/' + foName + str(i+10), foName + str(i+10), 2, 'DIM='+str(argsDict['dim'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i+10), foName + str(i+10), 'DIM='+str(argsDict['dim'][0]))
         results = aggResults(argsDict, foName, results, i+10)
     
     outfile = file('./' + foName + '/RESULTS_DIMTEST.csv', 'w')
     outfile.write(results)
     outfile.close()
     
-    #Jump in 500's until 5000
-    for i in range(3, 11):
+    #Jump in 500's until 2500
+    for i in range(3, 6):
         argsDict['dim'] = [i * 500]
-        runMultiRun(argsDict, foName + '/' + foName + str(i+30), foName + str(i+30), 2, 'DIM='+str(argsDict['dim'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i+30), foName + str(i+30), 'DIM='+str(argsDict['dim'][0]))
         results = aggResults(argsDict, foName, results, i+30)
     
     outfile = file('./' + foName + '/RESULTS_DIMTEST.csv', 'w')
@@ -116,12 +118,13 @@ def overlapTest(argsDict, foName):
     argsDict['corg'] = ['bi']
     argsdict['param']=['cdist']
     results = ''
+    multirun = int(argsDict['multirun'][0])
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
     
     for i in range(0, 21):
         argsDict['cdist'] = [.5 * (i + 1)]
-        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 2, 'CDIST='+str(argsDict['cdist'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 'CDIST='+str(argsDict['cdist'][0]))
         results = aggResults(argsDict, foName, results, i)
 
     outfile = file('./' + foName + '/RESULTS_OVERLAP.csv', 'w')
@@ -136,6 +139,7 @@ def colNoiseTest(argsDict, foName):
     v = 1000
     argsdict['param']=['dim']
     results = ''
+    multirun = int(argsDict['multirun'][0])
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
     
@@ -143,7 +147,7 @@ def colNoiseTest(argsDict, foName):
         c = int((10-i) * v/10)
         argsDict['dim'][0] = c
         argsDict['dummyCols'][0] = int(v - c)
-        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 2, 'dim='+str(argsDict['dim'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 'dim='+str(argsDict['dim'][0]))
         results = aggResults(argsDict, foName, results, i)
 
     outfile = file('./' + foName + '/RESULTS_COLNOISE.csv', 'w')
@@ -159,6 +163,7 @@ def noiseTest(argsDict, foName):
     argsDict['vectors'] = [250]
     argsDict['dim'] = [250]
     argsdict['param']=['noise']
+    multirun = int(argsDict['multirun'][0])
     
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
@@ -166,7 +171,7 @@ def noiseTest(argsDict, foName):
     #Jump in .2's starting at 0 until .20
     for i in range(0,11):
         argsDict['noise'] = [double(i*2)/100.0]
-        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 2, 'noise='+str(argsDict['noise'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 'noise='+str(argsDict['noise'][0]))
         results = aggResults(argsDict, foName, results, i)
 
     outfile = file('./' + foName + '/RESULTS_NOISETEST.csv', 'w')
@@ -176,7 +181,7 @@ def noiseTest(argsDict, foName):
     #Jump in .5's starting at .25 until 1.00
     for i in range(5, 21):
         argsDict['noise'] = [double(i * 5)/100.0]
-        runMultiRun(argsDict, foName + '/' + foName + str(i+10), foName + str(i+10), 2, 'noise='+str(argsDict['noise'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i+10), foName + str(i+10), 'noise='+str(argsDict['noise'][0]))
         results = aggResults(argsDict, foName, results, i+10)
     
     outfile = file('./' + foName + '/RESULTS_NOISETEST.csv', 'w')
@@ -195,6 +200,8 @@ def vectorTest(argsDict, foName):
     results = ''
     argsDict['dummyCols'] = [0]
     argsDict['dim'] = [500]
+    multirun = int(argsDict['multirun'][0])
+    argsdict['param']=['vectors']
     
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
@@ -202,7 +209,7 @@ def vectorTest(argsDict, foName):
     #Jump in 5's until 50
     for i in range(2,11):
         argsDict['vectors'] = [i * 5]
-        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 2, 'vect='+str(argsDict['vectors'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 'vect='+str(argsDict['vectors'][0]))
         results = aggResults(argsDict, foName, results, i)
 
     outfile = file('./' + foName + '/RESULTS_VECTTEST.csv', 'w')
@@ -212,17 +219,17 @@ def vectorTest(argsDict, foName):
     #Jump in 50's until 1000
     for i in range(1, 21):
         argsDict['vectors'] = [i * 50]
-        runMultiRun(argsDict, foName + '/' + foName + str(i+10), foName + str(i+10), 2, 'vect='+str(argsDict['vectors'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i+10), foName + str(i+10), 'vect='+str(argsDict['vectors'][0]))
         results = aggResults(argsDict, foName, results, i+10)
     
     outfile = file('./' + foName + '/RESULTS_VECTTEST.csv', 'w')
     outfile.write(results)
     outfile.close()
     
-    #Jump in 500's until 5000
-    for i in range(3, 11):
+    #Jump in 500's until 2500
+    for i in range(3, 6):
         argsDict['vectors'] = [i * 500]
-        runMultiRun(argsDict, foName + '/' + foName + str(i+30), foName + str(i+30), 2, 'vect='+str(argsDict['vectors'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i+30), foName + str(i+30), 'vect='+str(argsDict['vectors'][0]))
         results = aggResults(argsDict, foName, results, i+30)
     
     outfile = file('./' + foName + '/RESULTS_VECTTEST.csv', 'w')
@@ -239,6 +246,7 @@ def clustsTest(argsDict, foName):
     argsDict['vectors'] = [250]
     argsDict['dim'] = [250]
     argsdict['param']=['clusters']
+    multirun = int(argsDict['multirun'][0])
     
     if not os.path.exists('./' + foName + '/'):
         os.mkdir('./' + foName + '/')
@@ -246,7 +254,7 @@ def clustsTest(argsDict, foName):
     #Jump in 1's starting at 2 until 10
     for i in range(2,11):
         argsDict['clusters'] = [i]
-        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 2, 'clusters='+str(argsDict['clusters'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i), foName + str(i), 'clusters='+str(argsDict['clusters'][0]))
         results = aggResults(argsDict, foName, results, i)
 
     outfile = file('./' + foName + '/RESULTS_CLUSTSTEST.csv', 'w')
@@ -256,7 +264,7 @@ def clustsTest(argsDict, foName):
     #Jump in 3's starting at 10 until 40
     for i in range(1, 11):
         argsDict['clusters'] = [(i * 3) + 10]
-        runMultiRun(argsDict, foName + '/' + foName + str(i+10), foName + str(i+10), 2, 'clusters='+str(argsDict['clusters'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i+10), foName + str(i+10), 'clusters='+str(argsDict['clusters'][0]))
         results = aggResults(argsDict, foName, results, i+10)
     
     outfile = file('./' + foName + '/RESULTS_CLUSTSTEST.csv', 'w')
@@ -266,7 +274,7 @@ def clustsTest(argsDict, foName):
     #Jump in 10's until 100
     for i in range(1, 7):
         argsDict['clusters'] = [(i * 10) + 40]
-        runMultiRun(argsDict, foName + '/' + foName + str(i+30), foName + str(i+30), 2, 'clusters='+str(argsDict['clusters'][0]))
+        runMultiRun(argsDict, foName + '/' + foName + str(i+30), foName + str(i+30), 'clusters='+str(argsDict['clusters'][0]))
         results = aggResults(argsDict, foName, results, i+30)
     
     outfile = file('./' + foName + '/RESULTS_CLUSTSTEST.csv', 'w')
@@ -319,25 +327,38 @@ if __name__ == "__main__":
             cRaw += sys.argv[i] + ' '            
         fn = sys.argv[1]
         argsdict = argsDefault(argsdict)
-        if 'noise' in testType or 'all' in testType:
-            foName = fn + '.noise'
-            noiseTest(argsdict,foName)
+                    
+        tempdict = deepcopy(argsdict)
         if 'dim' in testType or 'all' in testType:
             foName = fn + '.dim'
-            dimensionTest(argsdict,foName)
+            dimensionTest(tempdict,foName)
+            
+        tempdict = deepcopy(argsdict)
         if 'vect' in testType or 'all' in testType:
             foName = fn + '.vect'
-            vectorTest(argsdict,foName)
+            vectorTest(tempdict,foName)
+            
+        tempdict = deepcopy(argsdict)
         if 'overlap' in testType or 'all' in testType:
             foName = fn + '.overlap'
-            overlapTest(argsdict, foName)
+            overlapTest(tempdict, foName)
+            
+        tempdict = deepcopy(argsdict)
         if 'col' in testType or 'all' in testType:
             foName = fn + '.noise'
-            colNoiseTest(argsdict, foName)
+            colNoiseTest(tempdict, foName)
+            
+        tempdict = deepcopy(argsdict)
         if 'clusts' in testType or 'all' in testType:
             foName = fn + '.clusts'
-            clustsTest(argsdict,foName)
+            clustsTest(tempdict,foName)
             
+        tempdict = deepcopy(argsdict)
+        if 'noise' in testType or 'all' in testType:
+            foName = fn + '.noise'
+            noiseTest(tempdict,foName)
+            
+        tempdict = argsdict
     else:
         print "Requires [testType] [outputFolder] [Option=<...>]\n\tSee TestSeqs.py for options and information"
 

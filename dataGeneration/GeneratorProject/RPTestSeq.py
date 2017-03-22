@@ -22,7 +22,8 @@ def runRPjava(argsdict,testPath,fName):
     returnCode = subprocess.call("java -jar ./RPHash.jar " + fName + " " + str(numClusters) + " " 
         + fName + "RPOut " + argsdict['clusteringmethod'][0] + " numblur=" + str(argsdict['numblur'][0])
         + " offlineclusterer=" + argsdict['offlineclusterer'][0] + " runs=" + str(argsdict['runs'][0])
-        + " decodertype=" + argsdict['decodertype'][0] + " numprojections=" + str(argsdict['numprojections'][0]), shell=True)
+        + " decodertype=" + argsdict['decodertype'][0] + " numprojections=" + str(argsdict['numprojections'][0]) 
+        + " dimparameter=" + str(argsdict['dimparameter'][0]) + " projection=" + str(argsdict['projection'][0]), shell=True)
     #copy metrics file from root to the current test filepath
     if os.path.isfile(testPath + 'metrics_time_memkb_wcsse.csv'):
         os.remove(testPath + 'metrics_time_memkb_wcsse.csv')
@@ -45,13 +46,14 @@ def runLabeler(fPath, fName, dataN):
     return returnCode
 
 
-def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, GenTime):
+def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, ext):
+    runTag = ext
     rc, RPTime = runRPjava(argsdict,testPath,fileN)
         
     if(rc == 0): 
         rpMetrics = readMetrics(testPath)
         dataN = fileN
-        fileN = fileN + 'RPOut.RPHashAdaptive2Pass'
+        fileN = fileN + 'RPOut.' + ext
         rc = runLabeler(testPath, fileN, dataN)
         
         if(rc == 0 or argsdict['exec'][0] == "size"):
@@ -74,9 +76,26 @@ def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, Ge
 
 
 def runRPSeq(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, GenTime):   
-    runTag = argsdict['clusteringmethod'][0]
+    
+    argsdict['clusteringmethod'][0] = 'adaptive'
+    argsdict['numblur'][0] = 0
+    argsdict['numprojections'][0] = 0
+    argsdict['decodertype'][0] = 'adaptive'
+    argsdict['offlineclusterer'][0] = 'none'    
         
-    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, GenTime)
+        
+    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, 'RPHashAdaptive2Pass')
+    
+    #java -jar rphash.jar input K output simple numblur=1 numprojections=1
+    #    dimparameter=24 projection=dbf decodertype=leech offlineclusterer=averagelink
+    
+    argsdict['clusteringmethod'][0] = 'simple'
+    argsdict['numblur'][0] = 1
+    argsdict['numprojections'][0] = 1
+    argsdict['decodertype'][0] = 'leech'
+    argsdict['offlineclusterer'][0] = 'averagelink'
+    
+    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, 'RPHashSimple')
     
     return
     

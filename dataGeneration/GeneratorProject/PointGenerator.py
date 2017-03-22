@@ -14,6 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 def genRawData(argsDict):
     zf = []
     centsF = []
+    vNoiseArray=[]
     ids = []
 
     ''' Parse arguments of dictionary '''
@@ -63,7 +64,8 @@ def genRawData(argsDict):
         else:
             
             z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma)
-            z = genSparseVects(argsDict, z)
+            z = genSparseData(argsDict, z)
+            z, ids, vNoiseArray = genSparseVectors(argsDict,z,ids,vNoiseArray)
             
             if(zf == []):
                 zf = z
@@ -72,7 +74,9 @@ def genRawData(argsDict):
                 zf = np.append(zf, z, 1)
                 centsF = np.column_stack((centsF, cents))
             
-            
+    
+    for i in xrange(len(vNoiseArray)):
+        ids[vNoiseArray[i]] = clusters + 1
     if(scaling == 'true'):
         z = scaleRawData(argsDict, z, minValue, maxValue);
     return zf, ids, centsF
@@ -126,13 +130,26 @@ def genDummyCols(argsDict, data):
 
     return data
 
-def genSparseVects(argsDict,data):
-    for i in xrange(int(float(argsDict["noise"][0]) * len(data))):
-        target = np.random.randint(0,len(data));
-        data[target] = np.random.uniform(float(argsDict["minValue"][0]),float(argsDict["maxValue"][0]));
+def genSparseData(argsDict,data):
+    targetPoints = int(float(argsDict["noise"][0]) * len(data))
+    
+    targetArray = np.random.choice(range(len(data)), targetPoints, replace=False)
+    
+    for i in xrange(len(targetArray)):
+        data[targetArray[i]] = np.random.uniform(float(argsDict["minValue"][0]),float(argsDict["maxValue"][0]));
         
     return data
+
+def genSparseVectors(argsDict,data,ids,targetArray):
+    if(targetArray == []):
+        targetPoints = int(float(argsDict["vectornoise"][0]) * len(data))
+        targetArray = np.random.choice(range(len(data)), targetPoints, replace=False)
     
+    for i in xrange(len(targetArray)):
+        data[targetArray[i]] = np.random.uniform(float(argsDict["minValue"][0]),float(argsDict["maxValue"][0]));
+    
+    
+    return data,ids,targetArray
 
 '''
     Generates centroids for clusters generation mean

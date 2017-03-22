@@ -49,6 +49,12 @@ def argsDefault(argsDict):
         argsDict['evint'] = [50]
     if not 'evtype' in argsDict:  #DEFAULT 'random'
         argsDict['evtype'] = ['random']
+    if not 'multirun' in argsDict: #DEFAULT 5
+        argsDict['multirun'] = [5]
+    if not 'batches' in argsDict: #DEFAULT 2
+        argsDict['batches'] = [2]
+    if not 'vectornoise' in argsDict: # DEFAULT 0
+        argsDict['vectornoise'] = [0.00]
         
         
     ''' DEFAULTS RPHash Params'''
@@ -67,6 +73,11 @@ def argsDefault(argsDict):
         argsDict['clusteringmethod'] = ['adaptive']
     if not 'offlineclusterer' in argsDict:  #DEFAULT 'none'
         argsDict['offlineclusterer'] = ['none']
+    if not 'dimparameter' in argsDict:  #DEFAULT 24
+        argsDict['dimparameter'] = [24]
+    if not 'projection' in argsDict: #DEFAULT 'none'
+        argsDict['projection'] = ['dbf']
+        
         
     if not 'param' in argsDict:
         argsDict['param'] = ['vectors']

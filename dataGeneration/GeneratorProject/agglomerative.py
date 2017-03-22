@@ -11,7 +11,7 @@ def affinityMatrix(A):
             ret[i][j] = d
     return ret
 
-def nn(grid,labels):
+def nn(grid,labels,clustersizes):
     '''
         find the nearest two clusters of the remaining clusters in labels
     '''
@@ -21,9 +21,10 @@ def nn(grid,labels):
         idx1 = labels[i]
         for j in xrange(i+1,len(labels)):
             idx2 = labels[j]
-            if grid[idx1][idx2] < minaff:
+            if grid[idx1][idx2] < minaff and (clustersizes[idx1]>0 or clustersizes[idx2]>0):
                 minaff = grid[idx1][idx2]
-                minlabel = [idx1,idx2]
+                if clustersizes[idx1]>clustersizes[idx2]:minlabel = [idx1,idx2]
+                else : minlabel = [idx2,idx1]
     return minlabel
 
 def weightedCentroid(A,clustersizes,keeplabel,removelabel):
@@ -32,7 +33,7 @@ def weightedCentroid(A,clustersizes,keeplabel,removelabel):
     '''
     newsize = float(clustersizes[removelabel]+clustersizes[keeplabel])
     weigthedRatioKeep = clustersizes[keeplabel]/newsize
-    weightedRatioRemove =clustersizes[removelabel]/newsize
+    weightedRatioRemove = clustersizes[removelabel]/newsize
     newcentroid = weigthedRatioKeep*A[keeplabel]+weightedRatioRemove*A[removelabel]
     return newcentroid,newsize
 
@@ -57,12 +58,20 @@ def agglomerate(A,k,clustersizes=None):
     '''
         perform agglomerative clustering until label size = k
     '''
+    A = array(A)
     grid = affinityMatrix(A)
     labels = range(len(grid))
     if clustersizes==None: clustersizes = [1.0]*len(grid)
     while len(labels) > k:
-        i,j = nn(grid,labels)
-        labels,A,grid,clustersizes = agglomerateNearest(i,j,labels,clustersizes, grid,A)
+        keeplabel,removelabel = nn(grid,labels,clustersizes)
+        labels,A,grid,clustersizes = agglomerateNearest(keeplabel,removelabel,labels,clustersizes, grid,A)
+
+    try:
+        badhombre = clustersizes.index(1.0)
+        print "crap"
+    except:
+        noopvar = None
+
     return [A[l] for l in labels],[clustersizes[l] for l in labels]
 
 if __name__ == "__main__":
@@ -70,11 +79,17 @@ if __name__ == "__main__":
     A.extend((random.randn(100,2)*.33+[-1,-1]).tolist())
     A.extend((random.randn(100,2)*.33+[1,-1]).tolist())
     A.extend((random.randn(100,2)*.33+[-1,1]).tolist())
+    A.extend((random.randn(100,2)*.33 + [2,-1]).tolist())
+    A.extend((random.randn(100,2)*.33 + [-2,2]).tolist())
+    A.extend(random.randn(100,2).tolist())
     A = array(A)
 
+    clusters,clustersizes =  agglomerate(A,6)
+    clusters = array(clusters)
+    '''
     import pylab
     pylab.plot(A[:,0],A[:,1],'o')
-    clusters,clustersizes =  agglomerate(A,4)
     pylab.plot(clusters[:,0],clusters[:,1],'*',markersize=10)
-    print clusters,clustersizes
     pylab.show()
+    '''
+print clusters,clustersizes

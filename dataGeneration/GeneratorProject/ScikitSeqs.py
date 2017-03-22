@@ -4,6 +4,7 @@ import subprocess
 import stats
 import time
 import sys
+import resource
 from utils import *
 from Project import *
 from RecursLSH import *
@@ -68,7 +69,25 @@ def runSizeAnalysis(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, Gen
     
     return
 
-
+def obj_size(obj, seen=None):
+    """Recursively finds size of objects"""
+    size = sys.getsizeof(obj)
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        return 0
+    # Important mark as seen *before* entering recursion to gracefully handle
+    # self-referential objects
+    seen.add(obj_id)
+    if isinstance(obj, dict):
+        size += sum([obj_size(v, seen) for v in obj.values()])
+        size += sum([obj_size(k, seen) for k in obj.keys()])
+    elif hasattr(obj, '__dict__'):
+        size += obj_size(obj.__dict__, seen)
+    elif hasattr(obj, '__iter__') and not isinstance(obj, z=(bytes, bytearray)):
+        size += sum([obj_size(i, seen) for i in obj])
+    return size
 
 def runSciKitCluster(numClusters, fPath, fName):
     start = time.time()
@@ -87,6 +106,7 @@ def runkMeans(argsdict, data, inlbl, fPath, fName, fileN, i,sampleType):
     est = KMeans(init=sampleType,n_clusters=int(argsdict['clusters'][0]),n_init=10)
     est.fit_predict(data)
     end = time.time()
+    #print "\nmemSize(end): \n" + str(obj_size(est,None))
     #print est.cluster_centers_
     
     return runRawAnalysis(argsdict,inlbl,est.labels_, fileN + '.Results', fPath + fName + str(i) + '_SIG.csv', (end-start))

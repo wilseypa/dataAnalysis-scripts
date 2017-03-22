@@ -1,8 +1,8 @@
 '''****************************************'''
 
-##    python MultiRun.py 5 1-22-17
-##    python MultiRun.py [Num of Runs] [OutputFolderName] [option=value]
-##    python MultiRun.py 5 1-22-17 vectors=100 clusters=6
+##    python MultiRun.py 1-22-17
+##    python MultiRun.py [OutputFolderName] [option=value]
+##    python MultiRun.py 1-22-17 vectors=100 clusters=6 multirun=5 batches=5
 
 '''*************** OPTIONS ****************
 
@@ -79,8 +79,10 @@ import time
         Each algorithm is run once on the same data set to get a perspective
             of how each performs
 '''
-def runMultiRun(argsdict, foName, fName, runs, runTag):
+def runMultiRun(argsdict, foName, fName, runTag):
     #Check if runtype = rphash/lshkit/all/none
+    runs = int(argsdict['batches'][0])
+    reps = int(argsdict['multirun'][0])    
     
     #Check for necessary files of each
     if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash"):
@@ -106,26 +108,26 @@ def runMultiRun(argsdict, foName, fName, runs, runTag):
         GenTime = runGenerator(foName, fName + str(i), argsdict)
         fPath = './' + foName + '/' + fName + str(i) + '/'
         fileN = fPath + fName + str(i)
-               
-        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "lshkit"):
-            # Run LSHKIT
-            runLSHKit(fPath, fileN)
         
-        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "sklearn" or argsdict["exec"][0] == "cluster"):
-            runSciKitSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
+        for r in xrange(reps):
         
-        if(argsdict["exec"][0] == "size"):
-            runSizeAnalysis(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
+            if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "lshkit"):
+                # Run LSHKIT
+                runLSHKit(fPath, fileN)
             
-        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "pylsh" or argsdict["exec"][0] == "cluster" or argsdict["exec"][0] == "size"):
-            runRecursLSHSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
+            if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "sklearn" or argsdict["exec"][0] == "cluster"):
+                runSciKitSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
             
-        fileN += '_RAW'
-        
-        if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash" or argsdict["exec"][0] == "cluster" or argsdict["exec"][0] == "size"):
-            # Run RPHash
-            runRPSeq(argsdict, fPath, fileN, fName, i, outFN, runTag,foName,GenTime)
-        
+            if(argsdict["exec"][0] == "size"):
+                runSizeAnalysis(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime)
+                
+            if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "pylsh" or argsdict["exec"][0] == "cluster" or argsdict["exec"][0] == "size"):
+                runRecursLSHSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTime) 
+            
+            if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash" or argsdict["exec"][0] == "cluster" or argsdict["exec"][0] == "size"):
+                # Run RPHash
+                runRPSeq(argsdict, fPath, fileN + '_RAW', fName, i, outFN, runTag,foName,GenTime)
+            
         
     return
     
@@ -144,24 +146,22 @@ Main
 if __name__ == "__main__":
     
     argsdict = {}
-    if len(sys.argv) > 2:
-        runs = int(sys.argv[1])
+    if len(sys.argv) > 1:
         print os.getcwd()
-        print "Starting Batch Generation and Analysis for " + str(runs) + " runs"
     
-        foName = sys.argv[2]
+        foName = sys.argv[1]
         cRaw = ''
         for i in range(0, len(sys.argv)):
             cRaw += sys.argv[i] + ' '
             
-        for farg in sys.argv[3:]:
+        for farg in sys.argv[2:]:
             (arg,val) = farg.split("=")
         
             argsdict[arg] = [val]
             
         argsdict = argsDefault(argsdict)
         
-        runMultiRun(argsdict, foName, foName, runs,'')
+        runMultiRun(argsdict, foName, foName,'')
         
     else:
         print "Requires [numRuns] [outFolder] [Option=<...>]\n\tSee MultiRun.py for options and information"
