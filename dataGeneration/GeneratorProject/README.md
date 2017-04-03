@@ -1,8 +1,9 @@
 ![DataGeneratorSystem](Images/DataGeneratorSystem.jpeg?raw=true "System Diagram of Data Generator and Testing")
 
 
-
 ************** REQUIREMENTS *************** 
+	
+	-Scikit-Learn for various clustering algorithms and result metrics
 	
 	-MatPlotLib for distribution plotting
 		-http://matplotlib.org/faq/installing_faq.html
@@ -40,6 +41,9 @@ Test Sequences with Analysis:
 	##	python TestSeqs.py overlap overlapTestFiles
 	##	python TestSeqs.py [testType] [outputFolder] [option=value]
 	##	python TestSeqs.py overlap overlapTestFiles vectors=10000 dim=1000
+		
+		##    Current Test Labels: 'all', 'vectnoise', 'colnoise', 'randnoise',
+		##                         'dim', 'vect', 'clusts', 'var', 'overlap'
 
 ***************  NOTES  ****************
 
@@ -61,37 +65,54 @@ Test Sequences with Analysis:
 
 *************** OPTIONS ****************
 
-    **General Options**
-        -infile (default null)	-File for input data generation
-	
-	    -scaling (default true)     -Toggle scaling of generated data
-        -minValue (default -.999)	-Max value of output data
-        -maxValue (default .999)	-Min value of output data
+        **General Options**
+        -exec (default all)    -Determine what programs to use for analysis
+                                'all' - use RPHash, sklearn, and LSHKit (see req's in readme)
+                                'rphash' 
+                                'lshkit' 
+                                'cluster': rphash + sklearn
+                                'LSH': rphash + lshkit
+                                'none'
+    
+        -scaling (default true)     -Toggle scaling of generated data
+        -minValue (default -.999)   -Max value of output data
+        -maxValue (default .999)    -Min value of output data
         
-        -dim (default 100)	    -Number of significant columns to generate
-        -dummyCols (default 50) -Number of uncorrelated columns to generate
-        
-        -clusters (default 3)	-Number of clusters to generate
-        -vectors (default 1000)	-Number of vectors to generate
+        -clusters (default 3)     -Number of clusters to generate
+        -vectors (default 1000)   -Number of vectors to generate
+        -dim (default 100)        -Number of significant columns to generate
 
-        -charts (default pdf) 	-Generated chart format (save, show, none, all, png, pdf)
+        -charts (default pdf)        -Generated chart format (save, show, none, all, png, pdf)
+        -output (default all)        -Output 'all' or 'minimal' files (generator)
+        -param  (default 'vectors')  -Parameter to add to csv output; can be any other parameter
     ____________________________________
+    
+    **Noise Options**
+        -noise (default 0%) (0-1)      -Amount of noise to add to final output
+        -featnoise (default 0%) (0-1)   -Percentage of uncorrelated features to generate
+        -vectnoise (default 0%) (0-1)  -Percentage of uncorrelated vectors to generate
+    ___________________________________
 
     **Generation Distribution Options**
-        -dist (default gauss)	-Distribution to generate points on
+        -dist (default gauss)    -Distribution to generate points on
             -gauss or normal        -Generate points on gaussian distribution
             -uniform or uni         -Generate points uniformly
-	        -binomial or binom      -Generate points using a binomial distribution
+            -binomial or binom      -Generate points using a binomial distribution
             -exponential or exp     -Generate points using an exponential distribution
     ____________________________________
    
     **CENTROID OPTIONS**
-	    -corg (default random) 	-Organization of clusters to be generated (pairs, triplets, etc.)
-		                            -random, bi, tri, quad, all
-	    -cdist (default .4) 	-Target distance of cluster centroid orgs
-        -csigma (default .1)	-Deviation of a cluster
-        -ccounts (default random) -Cluster counts to partition total vectors into
-                                    -random, equal, (TODO)separated
+        -corg (default random)     -Organization of clusters to be generated (pairs, triplets, etc.)
+                                       -random, bi, tri, quad, all
+        -cdist (default .4)        -Target distance of cluster centroid orgs
+        -csigma (default .1)       -Deviation of a cluster
+        -ccounts (default random)  -Cluster counts to partition total vectors into
+                                       -random, equal, (TODO)separated
+    ____________________________________
+    
+    **Test Sequence Multithreading**
+        -multithread (default false)    -Run multithreaded test sequences (python limits 1 sequence per core)
+        -threads (default 2)            -Max number of threads to spawn
     ____________________________________
 
     **Output Randomization Options**
@@ -101,5 +122,13 @@ Test Sequences with Analysis:
                                         columns stacked on low indexed features and dummy columns on 
                                         high indexed features; intermixed disperses evenly; random
                                         performs a shuffle on the columns
-        -noise (default 0%) (0-1)  -TODO Amount of noise to add to final output
+        -noise (default 0%) (0-1)      -Amount of noise to add to final output
+        -featnoise (default 0%) (0-1)   -Percentage of uncorrelated features to generate
+        -vectnoise (default 0%) (0-1)  -Percentage of uncorrelated vectors to generate
+    ____________________________________    
+    
+    **Cluster Evolution Options** (IN PROGRESS)
+        -evolve (default false) (true, false) -Turn on cluster evolution
+        -evint (default 250) -interval to change clusters on
+        -evtype (default random) -evolution type (random, *shift - *NOT IMPLEMENTED
     ____________________________________

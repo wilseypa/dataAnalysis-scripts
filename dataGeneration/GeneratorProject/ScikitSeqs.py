@@ -148,7 +148,7 @@ def runSciKitSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTim
             outfile = file(outFN, 'a')
             outfile.write('kmeans_' + kmeans[t] +  ',' + str(argsdict[argsdict['param'][0]][0]) + ',' + foName + str(i) + ',' + str(GenTime) + ',' + str(execTime) + ',' + str(aTime)
                           +  ',' + str(ari) + ',' + str(nmi) + ',' + str(ami) + ',' + str(homogeneity)  
-                          + ',' + str(completeness) + ',' + str(vscore) + ',' + str(fmi) + '\n')
+                          + ',' + str(completeness) + ',' + str(vscore) + ',' + str(fmi) + ',' + str(execTime) + '\n')
             outfile.close()
             
         for t in range(0,len(kmeans)):
@@ -159,7 +159,7 @@ def runSciKitSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTim
             outfile = file(outFN, 'a')
             outfile.write('kminibatch_' + kmeans[t] + ',' + str(argsdict[argsdict['param'][0]][0]) + ',' + foName + str(i) + ',' + str(GenTime) + ',' + str(execTime) + ',' + str(aTime)
                           +  ',' + str(ari) + ',' + str(nmi) + ',' + str(ami) + ',' + str(homogeneity)  
-                          + ',' + str(completeness) + ',' + str(vscore) + ',' + str(fmi) + '\n')
+                          + ',' + str(completeness) + ',' + str(vscore) + ',' + str(fmi) + ',' + str(execTime) + '\n')
             outfile.close()
         
         ari,nmi,ami,homogeneity,completeness,vscore,fmi,aTime,execTime = runMeanShift(argsdict, data, inlbl, fPath, fName, fileN, i, kmeans[t])
@@ -169,7 +169,7 @@ def runSciKitSeq(argsdict, fPath, fileN, fName, i, outFN, runTag, foName, GenTim
         outfile = file(outFN, 'a')
         outfile.write('MeanShift,' + str(argsdict[argsdict['param'][0]][0]) + ',' + foName + str(i) + ',' + str(GenTime) + ',' + str(execTime) + ',' + str(aTime)
                       +  ',' + str(ari) + ',' + str(nmi) + ',' + str(ami) + ',' + str(homogeneity)  
-                      + ',' + str(completeness) + ',' + str(vscore) + ',' + str(fmi) + '\n')
+                      + ',' + str(completeness) + ',' + str(vscore) + ',' + str(fmi) + ',' + str(execTime) + '\n')
         outfile.close()
         
         

@@ -13,12 +13,14 @@ def argsDefault(argsDict):
         argsDict['maxValue'] = [.999]
     if not 'scaling' in argsDict:  #DEFAULT 'true'
         argsDict['scaling'] = ['true']
+        
     if not 'clusters' in argsDict:  #DEFAULT 3
         argsDict['clusters'] = [3]
     if not 'dim' in argsDict:  #DEFAULT 100
         argsDict['dim'] = [100]
     if not 'vectors' in argsDict:  #DEFAULT 500
         argsDict['vectors'] = [500]
+    
     if not 'dist' in argsDict:  #DEFAULT 'gauss'
         argsDict['dist'] = ['gauss']
     if not 'cdist' in argsDict:  #DEFAULT .4
@@ -27,34 +29,47 @@ def argsDefault(argsDict):
         argsDict['corg'] = ['random']
     if not 'csigma' in argsDict:  #DEFAULT .1
         argsDict['csigma'] = [.1]
-    if not 'dummyCols' in argsDict:  #DEFAULT 50
-        argsDict['dummyCols'] = [50]
-    if not 'rshuf' in argsDict:  #DEFAULT 'true'
-        argsDict['rshuf'] = ['true']
-    if not 'cshuf' in argsDict:  #DEFAULT 'random'
-        argsDict['cshuf'] = ['random']
-    if not 'charts' in argsDict:  #DEFAULT 'pdf'
-        argsDict['charts'] = ['pdf']
     if not 'ccounts' in argsDict:  #DEFAULT 'random'
         argsDict['ccounts'] = ['random']
-    if not 'noise' in argsDict:  #DEFAULT 0
-        argsDict['noise'] = [.00]
+    
     if not 'ext' in argsDict:  #DEFAULT 'all'
         argsDict['ext'] = ['all']
     if not 'exec' in argsDict:  #DEFAULT 'cluster'
         argsDict['exec'] = ['cluster']
+        
     if not 'evolve' in argsDict:  #DEFAULT 'false'
         argsDict['evolve'] = ['false']
     if not 'evint' in argsDict:  #DEFAULT 50
         argsDict['evint'] = [50]
     if not 'evtype' in argsDict:  #DEFAULT 'random'
         argsDict['evtype'] = ['random']
+        
+    if not 'charts' in argsDict:  #DEFAULT 'pdf'
+        argsDict['charts'] = ['pdf']
+    if not 'output' in argsDict: #DEFAULT 'all'
+        argsDict['output'] = ['all']
+    if not 'param' in argsDict: #DEFAULT 'vectors'
+        argsDict['param'] = ['vectors']
+        
+    if not 'multithread' in argsDict:   #DEFAULT 'false'
+        argsDict['multithread'] = ['false']
+    if not 'threads' in argsDict:   #DEFAULT 2
+        argsDict['threads'] = [2]
     if not 'multirun' in argsDict: #DEFAULT 5
         argsDict['multirun'] = [5]
     if not 'batches' in argsDict: #DEFAULT 2
         argsDict['batches'] = [2]
-    if not 'vectornoise' in argsDict: # DEFAULT 0
-        argsDict['vectornoise'] = [0.00]
+        
+    if not 'rshuf' in argsDict:  #DEFAULT 'true'
+        argsDict['rshuf'] = ['true']
+    if not 'cshuf' in argsDict:  #DEFAULT 'random'
+        argsDict['cshuf'] = ['random']
+    if not 'featnoise' in argsDict: # DEFAULT 0
+        argsDict['featnoise'] = [0.00]
+    if not 'vectnoise' in argsDict: # DEFAULT 0
+        argsDict['vectnoise'] = [0.00]
+    if not 'noise' in argsDict:  #DEFAULT 0
+        argsDict['noise'] = [.00]
         
         
     ''' DEFAULTS RPHash Params'''
@@ -64,9 +79,9 @@ def argsDefault(argsDict):
     if not 'decodertype' in argsDict:  #DEFAULT 'none'
         argsDict['decodertype'] = ['adaptive']
     if not 'numprojections' in argsDict:  #DEFAULT 0
-        argsDict['numprojections'] = [0]
+        argsDict['numprojections'] = [1]
     if not 'numblur' in argsDict:  #DEFAULT 0
-        argsDict['numblur'] = [0]
+        argsDict['numblur'] = [1]
     if not 'runs' in argsDict:  #DEFAULT 1
         argsDict['runs'] = [1]
     if not 'clusteringmethod' in argsDict:  #DEFAULT 'adaptive'
@@ -75,13 +90,9 @@ def argsDefault(argsDict):
         argsDict['offlineclusterer'] = ['none']
     if not 'dimparameter' in argsDict:  #DEFAULT 24
         argsDict['dimparameter'] = [24]
-    if not 'projection' in argsDict: #DEFAULT 'none'
+    if not 'projection' in argsDict: #DEFAULT 'dbf'
         argsDict['projection'] = ['dbf']
-        
-        
-    if not 'param' in argsDict:
-        argsDict['param'] = ['vectors']
-    
+
     return argsDict
 
 def readDataFromFile(rawFileName, type):

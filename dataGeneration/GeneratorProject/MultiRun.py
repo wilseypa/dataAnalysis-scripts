@@ -7,7 +7,7 @@
 '''*************** OPTIONS ****************
 
     **General Options**
-        -exec (default all)    -Determine what algorithms to run against generated dataset
+        -exec (default all)    -Determine what programs to use for analysis
                                 'all' - use RPHash, sklearn, and LSHKit (see req's in readme)
                                 'rphash' 
                                 'lshkit' 
@@ -16,17 +16,23 @@
                                 'none'
     
         -scaling (default true)     -Toggle scaling of generated data
-        -minValue (default -.999)    -Max value of output data
+        -minValue (default -.999)   -Max value of output data
         -maxValue (default .999)    -Min value of output data
         
+        -clusters (default 3)     -Number of clusters to generate
+        -vectors (default 1000)   -Number of vectors to generate
         -dim (default 100)        -Number of significant columns to generate
-        -dummyCols (default 50) -Number of uncorrelated columns to generate
-        
-        -clusters (default 3)    -Number of clusters to generate
-        -vectors (default 5)    -Number of vectors to generate
 
-        -charts (default pdf)     -Generated chart format (save, show, none, all, png, pdf)
+        -charts (default pdf)        -Generated chart format (save, show, none, all, png, pdf)
+        -output (default all)        -Output 'all' or 'minimal' files (generator)
+        -param  (default 'vectors')  -Parameter to add to csv output; can be any other parameter
     ____________________________________
+    
+    **Noise Options**
+        -noise (default 0%) (0-1)      -Amount of noise to add to final output
+        -featnoise (default 0%) (0-1)   -Percentage of uncorrelated features to generate
+        -vectnoise (default 0%) (0-1)  -Percentage of uncorrelated vectors to generate
+    ___________________________________
 
     **Generation Distribution Options**
         -dist (default gauss)    -Distribution to generate points on
@@ -52,7 +58,15 @@
                                         columns stacked on low indexed features and dummy columns on 
                                         high indexed features; intermixed disperses evenly; random
                                         performs a shuffle on the columns
-        -noise (default 0%) (0-1)  -TODO Amount of noise to add to final output
+        -noise (default 0%) (0-1)      -Amount of noise to add to final output
+        -featnoise (default 0%) (0-1)   -Percentage of uncorrelated features to generate
+        -vectnoise (default 0%) (0-1)  -Percentage of uncorrelated vectors to generate
+    ____________________________________
+    
+    **Cluster Evolution Options** (IN PROGRESS)
+        -evolve (default false) (true, false) -Turn on cluster evolution
+        -evint (default 250) -interval to change clusters on
+        -evtype (default random) -evolution type (random, *shift - *NOT IMPLEMENTED
     ____________________________________
 
 ```****************************************'''
@@ -127,13 +141,9 @@ def runMultiRun(argsdict, foName, fName, runTag):
             if(argsdict["exec"][0] == "all" or argsdict["exec"][0] == "rphash" or argsdict["exec"][0] == "cluster" or argsdict["exec"][0] == "size"):
                 # Run RPHash
                 runRPSeq(argsdict, fPath, fileN + '_RAW', fName, i, outFN, runTag,foName,GenTime)
-            
-        
     return
     
-
 '''****************************************'''
-
 
 
 '''****************************************'''

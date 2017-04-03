@@ -34,6 +34,7 @@ def runRPjava(argsdict,testPath,fName):
 
 
 def readMetrics(fPath):
+    out = ""
     if os.path.isfile(fPath + 'metrics_time_memkb_wcsse.csv'):
         outfile = file(fPath + 'metrics_time_memkb_wcsse.csv', 'r')
         out = outfile.read();
@@ -46,8 +47,8 @@ def runLabeler(fPath, fName, dataN):
     return returnCode
 
 
-def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, ext):
-    runTag = ext
+def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, ext, label):
+    runTag = label
     rc, RPTime = runRPjava(argsdict,testPath,fileN)
         
     if(rc == 0): 
@@ -78,24 +79,27 @@ def runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, e
 def runRPSeq(argsdict, rootPath, fileN, fName, i, outFN, runTag, testPath, GenTime):   
     
     argsdict['clusteringmethod'][0] = 'adaptive'
-    argsdict['numblur'][0] = 0
-    argsdict['numprojections'][0] = 0
     argsdict['decodertype'][0] = 'adaptive'
     argsdict['offlineclusterer'][0] = 'none'    
         
         
-    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, 'RPHashAdaptive2Pass')
+    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, 'RPHashAdaptive2Pass', 'RPHashAdaptive2Pass')
     
     #java -jar rphash.jar input K output simple numblur=1 numprojections=1
     #    dimparameter=24 projection=dbf decodertype=leech offlineclusterer=averagelink
     
     argsdict['clusteringmethod'][0] = 'simple'
-    argsdict['numblur'][0] = 1
-    argsdict['numprojections'][0] = 1
     argsdict['decodertype'][0] = 'leech'
     argsdict['offlineclusterer'][0] = 'averagelink'
     
-    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, 'RPHashSimple')
+    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, 'RPHashSimple', 'RPHashLeechAvgLink')
+    
+    argsdict['clusteringmethod'][0] = 'simple'
+    argsdict['decodertype'][0] = 'sphere'
+    argsdict['offlineclusterer'][0] = 'kmeans'
+    argsdict['dimparameter'][0] = 20
+    
+    runSingleRP(argsdict, rootPath, fileN, fName, i, outFN, testPath, GenTime, 'RPHashSimple', 'RPHashSphereKmeans')
     
     return
     

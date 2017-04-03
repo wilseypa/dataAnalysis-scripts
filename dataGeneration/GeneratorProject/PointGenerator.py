@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from random import *
-from math import ceil
+from math import ceil, floor
 from sklearn.preprocessing import MinMaxScaler
 
 '''************** AUTHOR NICK *************'''
@@ -21,7 +21,12 @@ def genRawData(argsDict):
     minValue = float(argsDict['minValue'][0])
     maxValue = float(argsDict["maxValue"][0])
     clusters = int(argsDict["clusters"][0])
+    featnoise = float(argsDict['featnoise'][0])
     dimensions = int(argsDict["dim"][0])
+    dimensions = int(dimensions - floor(dimensions * featnoise))
+    if(dimensions == 0): 
+        dimensions = 1;
+    
     vectors = int(argsDict["vectors"][0])
     dist = argsDict["dist"][0]
     cdist = float(argsDict["cdist"][0])
@@ -53,7 +58,6 @@ def genRawData(argsDict):
                     zt = np.vstack((zt.flatten(), z.flatten()))
                     centstF = np.vstack((centstF.flatten(), cents.flatten))
                     
-            print zt
             if(zf == []):
                 zf = zt
                 centsF = centstF
@@ -123,9 +127,13 @@ def idClusters(argsDict, clusters, vectors):
     return retIds
 
 def genDummyCols(argsDict, data):
-    dummyCols = int(argsDict['dummyCols'][0])
+    dim = int(argsDict['dim'][0])
+    dummyCols = floor(float(argsDict['featnoise'][0])* dim)
+    if(dummyCols == dim):
+        dummyCols = dummyCols - 1
+    
     vectors = len(data)
-    z = np.random.uniform(0,0,[vectors, dummyCols]);
+    z = np.random.uniform(0,0,[vectors, int(dummyCols)]);
     data = np.append(data, z, 1)
 
     return data
@@ -142,7 +150,7 @@ def genSparseData(argsDict,data):
 
 def genSparseVectors(argsDict,data,ids,targetArray):
     if(targetArray == []):
-        targetPoints = int(float(argsDict["vectornoise"][0]) * len(data))
+        targetPoints = int(float(argsDict["featnoise"][0]) * len(data))
         targetArray = np.random.choice(range(len(data)), targetPoints, replace=False)
     
     for i in xrange(len(targetArray)):
