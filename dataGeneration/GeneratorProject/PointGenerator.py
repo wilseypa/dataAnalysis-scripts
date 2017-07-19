@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from random import *
+from sklearn.neighbors import NearestNeighbors
 from math import ceil, floor
 from sklearn.preprocessing import MinMaxScaler
 
@@ -79,8 +80,13 @@ def genRawData(argsDict):
                 centsF = np.column_stack((centsF, cents))
             
     
+    nbr = NearestNeighbors(n_neighbors=1, algorithm='brute').fit(centsF)
     for i in xrange(len(vNoiseArray)):
-        ids[vNoiseArray[i]] = clusters + 1
+        
+        distances, indices = nbr.kneighbors(zf[vNoiseArray[i]].reshape(1,-1))
+        
+        ids[vNoiseArray[i]] = indices[0][0]
+        
     if(scaling == 'true'):
         z = scaleRawData(argsDict, z, minValue, maxValue);
     return zf, ids, centsF
@@ -150,14 +156,23 @@ def genSparseData(argsDict,data):
 
 def genSparseVectors(argsDict,data,ids,targetArray):
     if(targetArray == []):
-        targetPoints = int(float(argsDict["featnoise"][0]) * len(data))
-        targetArray = np.random.choice(range(len(data)), targetPoints, replace=False)
+        targetPoints = int(float(argsDict["vectnoise"][0]) * float(len(data)))
+        targetArray = np.random.choice(len(data), targetPoints, replace=False)
+    
     
     for i in xrange(len(targetArray)):
         data[targetArray[i]] = np.random.uniform(float(argsDict["minValue"][0]),float(argsDict["maxValue"][0]));
     
-    
     return data,ids,targetArray
+
+def adjustLabels(argsDict,data,ids,targetArray):
+    
+    
+    
+    
+    return data, ids, targetArray
+
+
 
 '''
     Generates centroids for clusters generation mean
