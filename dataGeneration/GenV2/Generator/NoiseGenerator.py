@@ -1,67 +1,83 @@
 ''' 
-    Label Generator:
-        -Outputs centroid labels based number of clusters
-            and the cluster counts
-        -Number of clusters limits min/max ID [0 to N-1]
-        -Cluster counts determine how the total number of 
-            vectors is binned between the clusters
+    Noise Generator:
             
 '''
 
 import numpy as np
 from copy import deepcopy
+from math import ceil, floor
 
 
-class LabelGenerator():
+
+class NoiseGenerator():
     argDict = None
+    targetArray = []
     '''
-        Initialize the Label Generator; store the argument
+        Initialize the Noise Generator; store the argument
             dictionary and generated labels locally
     '''
     def __init__(self, argDict):
         self.argDict = deepcopy(argDict)
-        self.labels = []
-    
+        
         return
     
-    '''
-        Generates cluster ids from 1 to # of clusters
-    '''
-    def idClusters(self):        
-        retIds = []
-        clusters = int(self.argDict["clusters"])
-        vectors = int(self.argDict["vectors"])
-        ccounts = self.argDict["ccounts"]
+    def genNoiseComponents(self, data, labels):
+        data = self.genVectorNoise(data)
+        data = self.genFeatureNoise(data)
+        data = self.genRandomNoise(data)
+        data, labels = self.shuffleRows(data, labels)
+        data = self.shuffleCols(data)
+        return data, labels
+    
+    
+    def genVectorNoise(self, data):
         
-        if ccounts == 'equal':
-            for i in range(0, int(clusters)):
-                z = np.array([i for t in range(0, vectors/clusters)])
-                
-                if (retIds == []):
-                    retIds = z
-                else:
-                    retIds = np.append(retIds, z);   
-                
-        elif ccounts == 'separated':
-            #TODO: 
-            print "Not Implemented" 
-        else: #random or nothing was entered
-            zc = (np.random.randn(clusters) * (.1*(vectors/clusters))) + (vectors/clusters)
-            tot = 0
-            for i in range(0,int(clusters) - 1):
-                z = np.array([i for t in range(0, int(zc[i])) ])
-                
-                tot = tot + int(zc[i])
-                
-                if (retIds == []):
-                    retIds = z
-                else:
-                    retIds = np.hstack((retIds, z)); 
-            
-            z = np.array([int(clusters-1) for t in range(0, vectors - tot)])
-            if (retIds == []):
-                retIds = z
-            else:
-                retIds = np.hstack((retIds, z)); 
         
-        return retIds
+        if(self.targetArray == []):
+            targetPoints = int(float(self.argDict["vectorNoise"])* float(len(data)))
+            self.targetArray = np.random.choice(len(data), targetPoints, replace=False)
+    
+    
+        for i in xrange(len(self.targetArray)):
+            data[self.targetArray[i]] = np.random.uniform(float(self.argDict["minValue"]),float(self.argDict["maxValue"]));
+        return data
+    
+    def genFeatureNoise(self, data):
+        dim = int(self.argDict['dimensions'])
+        dummyCols = floor(float(self.argDict['featureNoise'])* dim)
+        if(dummyCols == dim):
+            dummyCols = dummyCols - 1
+    
+        vectors = len(data)
+        z = np.random.uniform(0,0,[vectors, int(dummyCols)]);
+        data = np.append(data, z, 1)
+        
+        return data
+    
+    
+    def genRandomNoise (self, data):
+        targetPoints = int(float(self.argDict["randomNoise"]) * len(data))
+    
+        targetArray = np.random.choice(range(len(data)), targetPoints, replace=False)
+    
+        for i in xrange(len(targetArray)):
+            data[targetArray[i]] = np.random.uniform(float(self.argDict["minValue"]),float(self.argDict["maxValue"]));
+        
+        return data
+    
+    def shuffleRows(self,data, labels):
+        if(self.argDict["cshuf"] == True):
+            idsout = np.column_stack((data, labels))
+            np.random.shuffle(idsout)
+            data = idsout[:,:-1]
+            labels = idsout[:,-1:]
+        return data, labels
+    
+    
+    def shuffleCols(self,data):
+        if(self.argDict["rshuf"] == True):
+            data = np.transpose(data)
+            np.random.shuffle(data)
+            data = np.transpose(data)
+        
+        return data

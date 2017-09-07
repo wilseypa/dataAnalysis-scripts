@@ -1,6 +1,7 @@
 from LabelGenerator import *
 from ObjectGenerator import OneDObjectGenerator
 from CentroidGenerator import *
+from NoiseGenerator import *
 from copy import deepcopy
 
 class Generator():
@@ -70,6 +71,10 @@ class Generator():
                 data = np.append(data, t_data, 1)
                 cents = np.column_stack((cents,  t_cents))
                 #centsF = np.column_stack((centsF, cents))
+        
+        
+        ng = NoiseGenerator(self.argDict)
+        ng.genNoiseComponents(data, lbl)
         
         print data
         print cents
