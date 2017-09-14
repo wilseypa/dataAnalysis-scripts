@@ -2,14 +2,35 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import inspect
 import numpy as np
+from math import ceil
+from copy import deepcopy
 
 class DataPlotting():
     ''' A simple class for plotting the input data '''
+    argDict = None
     
-    
+    def generateTilePlot(self, data):
+        d = int(self.argDict["dimensions"])
+        columns = 5
+        rows = int(ceil(d/(2*columns)))
+
+
+        plt.figure(1)
+        data = np.transpose(data)
+        for n in range(0,rows):
+            for m in range(0,columns):
+                if 10*n+2*m < d:
+                    x_val = [x for x in data[10*n+2*m]]
+                    print x_val
+                    y_val = [y for y in data[10*n+2*m+1]]
+                    plt.subplot(columns, rows, 5*n+m+1)
+                    plt.scatter(x_val, y_val)
+                    plt.grid(True, which='both')
+        return
+
     def __init__(self, argDict):
         #TODO
-        self.argDict = argDict
+        self.argDict = deepcopy(argDict)
 
     def test(self):
         print "Reached Test!"
@@ -68,7 +89,7 @@ class DataPlotting():
         colors = ['r', 'c', 'y', 'g', 'b', 'm', 'k']
 
         plt.figure(1)
-        plt.subplot(221)
+        #plt.subplot(221)
 
         for i in range(0, len(x_val)):
             if (match == {}):
