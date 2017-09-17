@@ -31,13 +31,10 @@ class NoiseGenerator():
     
     
     def genVectorNoise(self, data):
-        
-        
         if(self.targetArray == []):
             targetPoints = int(float(self.argDict["vectorNoise"])* float(len(data)))
             self.targetArray = np.random.choice(len(data), targetPoints, replace=False)
-    
-    
+            
         for i in xrange(len(self.targetArray)):
             data[self.targetArray[i]] = np.random.uniform(float(self.argDict["minValue"]),float(self.argDict["maxValue"]));
         return data

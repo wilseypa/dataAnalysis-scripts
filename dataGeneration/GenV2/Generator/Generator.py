@@ -1,5 +1,5 @@
 from LabelGenerator import *
-from ObjectGenerator import OneDObjectGenerator
+from ObjectGenerator import OneDObjectGenerator, TwoDObjectGenerator
 from CentroidGenerator import *
 from NoiseGenerator import *
 from copy import deepcopy
@@ -29,9 +29,9 @@ class Generator():
         #    5. Basic plots of data to output
         lg = LabelGenerator(self.argDict)
         lbl = lg.idClusters()
-        a = len(lbl)
+        a = int(self.argDict['dimensions'])
         
-        object = 'none'
+        object = self.argDict['object']
         
         # Keep generating centroids during an evolution?
         cg = CentroidGenerator(self.argDict, lbl)
@@ -41,7 +41,6 @@ class Generator():
         cents = []
         t_cents = []
         
-            
         while (a > 0):
             if object == '1D':
                 og = OneDObjectGenerator.OneDObjectGenerator(self.argDict,  lbl,  t_cents,  cg)
@@ -54,30 +53,26 @@ class Generator():
                 a = a-3
             elif object == 'ND':
                 og = NdObjectGenerator.NdObjectGenerator(self.argDict,  lbl,  t_cents,  cg)
-                # TODO: a = a-
+                # TODO: a = a-N
             else: 
-                og = OneDObjectGenerator.OneDObjectGenerator(self.argDict,  lbl, t_cents,  cg)
-                a = a-1
-                
-            
+                og = TwoDObjectGenerator.TwoDObjectGenerator(self.argDict,  lbl, t_cents,  cg)
+                a = a-2
                 
             t_data, t_cents = og.generate()   
             
             if(data == []):
                 data = t_data
                 cents = t_cents
-                #centsF = cents
             else:
                 data = np.append(data, t_data, 1)
                 cents = np.column_stack((cents,  t_cents))
-                #centsF = np.column_stack((centsF, cents))
-        
+                print "Shape: " + str(t_data.shape)
         
         ng = NoiseGenerator(self.argDict)
-        ng.genNoiseComponents(data, lbl)
-        
-        print data
-        print cents
+        #ng.genNoiseComponents(data, lbl)
+        print data.shape
+        #print data
+        #print cents
         return data,  cents,  lbl;
     
     

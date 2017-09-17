@@ -131,6 +131,7 @@ class arguments():
         parser.add_argument('--featureNoise', '-fn',  help='Percentage of feature noise to generate', default=0.00)
         parser.add_argument('--vectorNoise', '--vectNoise', '-vn',  help='Percentage of vector noise to generate',  default=0.00)
         parser.add_argument('--randomNoise', '--noise',  '-rn', help='Percentage of random noise to generate',  default=0.00)
+        parser.add_argument('--object', '-o', help='type of objects to generate', default='1D')
         
         ##TODO: Still need to add additional RPHash parameters and complete more testing on the above parameters
         parser.add_argument('--RPparallel', '-rpp',  help='Run RPHash in parallel (True/False)',  default=True)

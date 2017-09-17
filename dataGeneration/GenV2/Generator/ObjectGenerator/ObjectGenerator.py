@@ -1,3 +1,5 @@
+import numpy as np
+
 
 class ObjectGenerator():
     argDict = []
@@ -13,3 +15,17 @@ class ObjectGenerator():
         
     def getCents(self):
         return self.centroidGenerator.genCentroids()
+
+    def scaleAssurance(self,data):
+        minValue = self.argDict["minValue"]
+        maxValue = self.argDict["maxValue"]
+        mins = np.min(z)
+        maxs = np.max(z)
+    
+        rng = maxs - mins
+        #Normalize
+        z = maxValue - (((maxValue - minValue) * (maxs - z)) / rng)
+
+        return z
+        
+        
