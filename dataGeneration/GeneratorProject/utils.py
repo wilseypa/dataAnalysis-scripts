@@ -13,7 +13,9 @@ def argsDefault(argsDict):
         argsDict['maxValue'] = [.999]
     if not 'scaling' in argsDict:  #DEFAULT 'true'
         argsDict['scaling'] = ['true']
-        
+ 
+    if not 'centroidFile' in argsDict:
+	argsDict['centroidFile'] = None
     if not 'clusters' in argsDict:  #DEFAULT 3
         argsDict['clusters'] = [3]
     if not 'dim' in argsDict:  #DEFAULT 100

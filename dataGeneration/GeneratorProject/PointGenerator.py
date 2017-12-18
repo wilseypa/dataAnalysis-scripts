@@ -49,7 +49,7 @@ def genRawData(argsDict):
                         ids = idClusters(argsDict, clusters, vectors%int(argsDict["evint"][0]))
                 else:
                     ids = idClusters(argsDict, clusters, vectors)
-                z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma)
+                z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma, dim)
                 z = genSparseVects(argsDict, z)
         
                 if(zt == []):
@@ -68,7 +68,7 @@ def genRawData(argsDict):
                     
         else:
             
-            z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma)
+            z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma, dim)
             z = genSparseData(argsDict, z)
             z, ids, vNoiseArray = genSparseVectors(argsDict,z,ids,vNoiseArray)
             
@@ -263,17 +263,27 @@ def genCentroids(argsDict, clusters, minValue, maxValue):
             else:
                 zf = np.append(zf,z,1)
     
-    
     return zf
+
+
+def getCentroidColumn(argsDict, dim):
+    z=np.genfromtxt(argsDict['centroidFile'][0],delimiter=',')
+
+    dim = dim % z.shape[1]
+    return z[:,dim]
 
 
 '''
     Generates a single raw column by creating centroids for the point ids,
         then generate points in columns using centroid as mean
 '''
-def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma):
+def genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma, dim):
     
-    cents = genCentroids(argsDict, clusters, minValue, maxValue)
+    if argsDict['centroidFile'] is None:
+        cents = genCentroids(argsDict, clusters, minValue, maxValue)
+    else:
+        cents = getCentroidColumn(argsDict, dim)
+
     zf = []
     bc = np.bincount(ids)    
     

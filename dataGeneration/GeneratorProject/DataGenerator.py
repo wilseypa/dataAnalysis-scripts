@@ -174,12 +174,15 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
             
         #output centroids
         outfile = file(fPathRaw + '_CENTS.csv','w')
+	out = ""
         for i in xrange(len(cents)):
             if(dimensions == 1):
-                outfile.write(str(cents[i]) + '\n')
+                out += str(cents[i]) + '\n'
             else:
                 for dim in xrange(dimensions):
-                    outfile.write(str(cents[i,dim]) + '\n')
+                    out += str(cents[i,dim]) + ','
+		out = out[:-1] + '\n'
+	outfile.write(out)
         outfile.close()
         
         outfile = file(fPathRaw + '_LBL.csv','w')
