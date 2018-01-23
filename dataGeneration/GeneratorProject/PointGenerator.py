@@ -1,3 +1,4 @@
+import gc
 import sys
 import numpy as np
 from random import *
@@ -51,7 +52,6 @@ def genRawData(argsDict):
                     ids = idClusters(argsDict, clusters, vectors)
                 z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma, dim)
                 z = genSparseVects(argsDict, z)
-        
                 if(zt == []):
                     zt = z
                     centstF = cents
@@ -71,7 +71,8 @@ def genRawData(argsDict):
             z, cents = genRawColumn(argsDict, clusters, ids, dist, vectors, minValue, maxValue, csigma, dim)
             z = genSparseData(argsDict, z)
             z, ids, vNoiseArray = genSparseVectors(argsDict,z,ids,vNoiseArray)
-            
+            #print dim, sys.getsizeof(z), sys.getsizeof(zf), sys.getsizeof(ids), sys.getsizeof(centsF)
+            gc.collect()
             if(zf == []):
                 zf = z
                 centsF = cents
@@ -89,6 +90,7 @@ def genRawData(argsDict):
         
     if(scaling == 'true'):
         z = scaleRawData(argsDict, z, minValue, maxValue);
+    print "exiting generation"
     return zf, ids, centsF
 
 

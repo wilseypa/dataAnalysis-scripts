@@ -47,9 +47,9 @@ def argsDefault(argsDict):
         argsDict['evtype'] = ['random']
         
     if not 'charts' in argsDict:  #DEFAULT 'pdf'
-        argsDict['charts'] = ['pdf']
+        argsDict['charts'] = ['None']
     if not 'output' in argsDict: #DEFAULT 'all'
-        argsDict['output'] = ['all']
+        argsDict['output'] = ['minimal']
     if not 'param' in argsDict: #DEFAULT 'vectors'
         argsDict['param'] = ['vectors']
         
@@ -62,8 +62,8 @@ def argsDefault(argsDict):
     if not 'batches' in argsDict: #DEFAULT 2
         argsDict['batches'] = [2]
         
-    if not 'rshuf' in argsDict:  #DEFAULT 'true'
-        argsDict['rshuf'] = ['true']
+    if not 'rshuf' in argsDict:  #DEFAULT 'false'
+        argsDict['rshuf'] = ['false']
     if not 'cshuf' in argsDict:  #DEFAULT 'random'
         argsDict['cshuf'] = ['random']
     if not 'featnoise' in argsDict: # DEFAULT 0

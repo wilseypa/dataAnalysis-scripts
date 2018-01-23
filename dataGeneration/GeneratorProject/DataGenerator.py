@@ -66,6 +66,7 @@ from PointGenerator import *
 from utils import *
 from math import floor
 import time
+import timeit
 import os
 import numpy as np
 
@@ -98,15 +99,17 @@ def generateData(argsDict):
 
     #Generate the data, centroids, and ids
     data, ids, cents = genRawData(argsDict)
-    clearPlots()
+    if(argsDict['charts'] == 'All'):
+    	print "Plotting..."
+	    clearPlots()
     
-    if(len(data[0]) >= 2):
-        simplePlot((x[0] for x in data), (x[1] for x in data),ids,cents,{});
-    if(len(data[0]) >= 3):
-        r3DPlot((x[0] for x in data), (x[1] for x in data),(x[2] for x in data), ids,222,cents,{});
-    if(len(data[0]) >= 6):
-        r3DPlot((x[3] for x in data), (x[4] for x in data),(x[5] for x in data), ids,224,cents,{});
-    eucPlot(data, ids,cents,{})
+        if(len(data[0]) >= 2):
+            simplePlot((x[0] for x in data), (x[1] for x in data),ids,cents,{});
+        if(len(data[0]) >= 3):
+            r3DPlot((x[0] for x in data), (x[1] for x in data),(x[2] for x in data), ids,222,cents,{});
+        if(len(data[0]) >= 6):
+            r3DPlot((x[3] for x in data), (x[4] for x in data),(x[5] for x in data), ids,224,cents,{});
+        eucPlot(data, ids,cents,{})
     
     sigCols = data
     data = genDummyCols(argsDict,data)
@@ -117,7 +120,7 @@ def generateData(argsDict):
     Output the generated files - RAW, SIG, CENTS, LBL, LBLONLY
 '''
 def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
-    
+    print "Writing Files..."
     vectors = int(argsDict["vectors"][0])
     dimensions = int(argsDict["dim"][0])
     featnoise = float(argsDict['featnoise'][0])
@@ -131,29 +134,35 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
     p = int(argsDict["dim"][0])
     
     idsout = []
-    
+    print "shuffle"
     if rshuf == 'true':
         z, ids, idsout, sigCols = shuffleRows(z, ids, sigCols)
 
     if(output == 'all' or output == 'minimal'):
+	print "Raw"
         #Output Raw
-        outfile = file(fPathRaw + '_RAW','w')
-        outfile.write(str(len(z))+'\n'+str(p)+'\n')
+        outString = str(len(z))+'\n'+str(p)+'\n'
         for i in xrange(len(z)):
             for dim in xrange(p):
-                outfile.write(str(z[i,dim]))
-                if i != len(z)-1 or dim!=p-1:
-                    outfile.write('\n')
+                outString+=str(z[i,dim]) + "\n"
+                #outfile.write(str(z[i,dim]))
+        outString= outString[:-1]
+        
+        
+        outfile= file(fPathRaw + '_RAW', 'a')
+        outfile.write(outString)
         outfile.close()
         
+        print "LBL"
         outfile = file(fPathRaw + '_LBLONLY.csv','w')
         outfile.write(str(len(ids))+'\n1\n')
         for i in xrange(len(ids)):
-            outfile.write(str(ids[i,0]) + "\n")
+            outfile.write(str(ids[i]) + "\n")
         outfile.close()
 
     if(output == 'all'):
         #output significant columns
+	print "sigCols"
         outfile = file(fPathRaw + '_SIG.csv','w')
         for i in xrange(len(sigCols)):
             for dim in xrange(dimensions):
@@ -165,6 +174,7 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
         outfile.close()
             
         #output LSHKIT
+	print "LSHKit"
         outfile = file(fPathRaw + '_LSHKIT','w')
         for i in xrange(len(z)):
             for dim in xrange(dimensions):
@@ -172,6 +182,7 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
             outfile.write('\n')
         outfile.close()
             
+	print "CENTS"
         #output centroids
         outfile = file(fPathRaw + '_CENTS.csv','w')
 	out = ""
@@ -186,6 +197,7 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
         outfile.close()
         
         outfile = file(fPathRaw + '_LBL.csv','w')
+	print "LBLD"
         #Output Labeled
         for i in xrange(len(ids)):
             for dim in xrange(p+1):
@@ -195,12 +207,13 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
             
 
         #Output plots
-        if(charts == 'save' or charts == 'all' or charts == 'pdf' or charts == 'png'):
-            generatePlots(fPathRaw, charts)
+        #if(charts == 'save' or charts == 'all' or charts == 'pdf' or charts == 'png'):
+            #generatePlots(fPathRaw, charts)
 
     #Output configuration
+    print "cfg"
     outputConfiguration(fPathRaw, argsDict, cRaw)
-
+    print "Done writing..."
     return
 
 '''
