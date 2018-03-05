@@ -101,7 +101,7 @@ def generateData(argsDict):
     data, ids, cents = genRawData(argsDict)
     if(argsDict['charts'] == 'All'):
     	print "Plotting..."
-	    clearPlots()
+        clearPlots()
     
         if(len(data[0]) >= 2):
             simplePlot((x[0] for x in data), (x[1] for x in data),ids,cents,{});
@@ -139,7 +139,7 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
         z, ids, idsout, sigCols = shuffleRows(z, ids, sigCols)
 
     if(output == 'all' or output == 'minimal'):
-	print "Raw"
+        print "Raw"
         #Output Raw
         outString = str(len(z))+'\n'+str(p)+'\n'
         for i in xrange(len(z)):
@@ -157,12 +157,19 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
         outfile = file(fPathRaw + '_LBLONLY.csv','w')
         outfile.write(str(len(ids))+'\n1\n')
         for i in xrange(len(ids)):
-            outfile.write(str(ids[i]) + "\n")
+            outfile.write(str(int(ids[i])) + "\n")
         outfile.close()
+        
+        print "CSV"
+        np.savetxt(fPathRaw + '_CSVRAW.csv', z, delimiter=',')
+        
+        print "SSV"
+        np.savetxt(fPathRaw + '_SSVRAW.csv', z, delimiter=' ')
+        
 
     if(output == 'all'):
         #output significant columns
-	print "sigCols"
+        print "sigCols"
         outfile = file(fPathRaw + '_SIG.csv','w')
         for i in xrange(len(sigCols)):
             for dim in xrange(dimensions):
@@ -220,19 +227,21 @@ def outputFiles(argsDict, fPathRaw, z, ids, cents, sigCols, cRaw):
     append the ids to the data, then shuffle the rows to retain data ids
 '''
 def shuffleRows(z, ids, sigCols):
+    print "RowShuf"
     idsout = np.column_stack((sigCols, z))
     idsout = np.column_stack((idsout, ids))
     np.random.shuffle(idsout)
     sigCols = idsout[:,:sigCols.shape[1]]
     idsout = idsout[:,sigCols.shape[1]:]
     z = idsout[:,:-1]
-    ids = idsout[:,-1:]
+    ids = idsout[:,-1:].flatten()    
     return z, ids, idsout, sigCols
 
 '''
     Transposes, shuffles columns (now rows), then transpose back for shuffled columns
 '''
 def shuffleCols(data):
+    print "ColShuf"
     data = np.transpose(data)
     np.random.shuffle(data)
     data = np.transpose(data)
