@@ -1,18 +1,27 @@
 import numpy as np
 from scipy.spatial import distance_matrix
 import statistics
-from scipy.signal import find_peaks
+# from scipy.signal import find_peaks
 
 
 # A function to determine if there is a relatively large gap in the values of the sorted distances.
 def gapInSortedDists(sortedDists):
     diffedDists = np.diff(sortedDists)   # Compute the first order adjacent differences of the sorted distances.
+    avg = statistics.mean(diffedDists)
     sd = statistics.stdev(diffedDists)
-    peaks = find_peaks(diffedDists, prominence=4*sd)
-    if peaks[0].size > 0:
-        return True
-    else:
-        return False
+    peak = avg + 8*sd
+
+    # peaks = find_peaks(diffedDists, prominence=10*sd)
+    # if peaks[0].size > 0:
+    #     return True
+    # else:
+    #     return False
+
+    for val in diffedDists:
+        if val > peak:
+            return True
+
+    return False
 
 
 data = np.genfromtxt('testData.csv', delimiter=',', skip_header=1)   # Load the entire data as a numpy array.
@@ -21,7 +30,7 @@ dim = data.shape[1]   # Get the dimension of the data.
 window = np.empty([0, dim])   # Create an empty sliding window.
 windowMaxSize = 200   # Set the maximum number of data points the window may contain.
 pointCounter = 0
-f = 5   # A factor that determines when new data points are added to the sliding window.
+f = 3   # A factor that determines when new data points are added to the sliding window.
 
 # Create two lists for the LRU architecture.
 windowKeys = []
@@ -43,7 +52,6 @@ for currVec in data:   # Loop through each vector in the data:
         if window.shape[0] == windowMaxSize:
             distMat = np.tril(distance_matrix(window, window))
             np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
-            # print(distMat)
 
     else:
         # Compute the distances from the current vector to the existing ones in the window.
@@ -115,6 +123,7 @@ for currVec in data:   # Loop through each vector in the data:
             np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
 
 
+np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
 # print(distMat)
 # print(min(distMat[1:,0]))
 # print(list(distMat[3,:]).index(min(distMat[3,:3])))
