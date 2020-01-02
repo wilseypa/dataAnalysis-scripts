@@ -9,7 +9,7 @@ def gapInSortedDists(sortedDists):
     diffedDists = np.diff(sortedDists)   # Compute the first order adjacent differences of the sorted distances.
     avg = statistics.mean(diffedDists)
     sd = statistics.stdev(diffedDists)
-    peak = avg + 10*sd
+    peak = avg + 12*sd
     # trough = avg - 8*sd
 
     # peaks = find_peaks(diffedDists, prominence=10*sd)
@@ -32,8 +32,8 @@ dim = data.shape[1]   # Get the dimension of the data.
 window = np.empty([0, dim])   # Create an empty sliding window.
 windowMaxSize = 200   # Set the maximum number of data points the window may contain.
 pointCounter = 0
-f1 = 3   # A factor that determines when new data points are added to the sliding window.
-# f2 = 0.25
+f1 = 4   # A factor that determines when new data points are added to the sliding window.
+f2 = 0.05
 
 # Create two lists for the LRU architecture.
 windowKeys = []
@@ -62,12 +62,12 @@ for currVec in data:   # Loop through each vector in the data:
         for existingVector in window:
             existingVector.shape = (1, dim)
             dist = np.linalg.norm(existingVector - currVec)
-            if dist == 0:
-                break
+            # if dist == 0:
+            #     break
             distsFromCurrVec.append(dist)
 
-        if dist == 0:
-            continue
+        # if dist == 0:
+        #     continue
 
         # Sort the distances from the current vector (to the existing ones in the window) in increasing order.
         ascendingDists = sorted(distsFromCurrVec)
@@ -98,8 +98,8 @@ for currVec in data:   # Loop through each vector in the data:
 
         # Test the main criteria for adding the current vector to the sliding window.
         # If the current vector is to be added:
-        if (nnDistCurrVec / nnDistNN > f1) or gapInSortedDists(ascendingDists):
-        # if (nnDistCurrVec/nnDistNN > f1) or (nnDistCurrVec/nnDistNN < f2) or gapInSortedDists(ascendingDists):
+        # if (nnDistCurrVec / nnDistNN > f1) or gapInSortedDists(ascendingDists):
+        if (nnDistCurrVec/nnDistNN > f1) or (nnDistCurrVec/nnDistNN < f2) or gapInSortedDists(ascendingDists):
             print("Point Added")
             print('=====================================================================================')
             keyToBeDeleted = dynamicKeyContainer.pop(0)   # Delete and return the first element from the list.
@@ -132,7 +132,7 @@ for currVec in data:   # Loop through each vector in the data:
             nnKey = windowKeys[nnIndex]
             dynamicKeyContainer.append(dynamicKeyContainer.pop(dynamicKeyContainer.index(nnKey)))
 
-        # Dump the content of the window to a file every time n new data vectors are added to the window.
+        # Dump the content of the window to a file with the arrival of every n new data vectors from the stream.
         if (pointCounter % windowMaxSize == 0) and (pointCounter > windowMaxSize):   # Here, n = windowMaxSize
             np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
 
