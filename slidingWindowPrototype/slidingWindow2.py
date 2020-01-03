@@ -18,6 +18,7 @@ pointCounter = 0
 
 windowKeys = []
 partitionLabels = []
+avgNNDistPartitions = {}
 
 key = 0
 
@@ -34,13 +35,38 @@ for currVec in data:   # Loop through each vector in the data:
         partitionLabels.append(label)
         key += 1
 
-        # Once the window size reaches its max, construct the lower triangular distance matrix and dump
-        # the contents of the window in a file.
-        if window.shape[0] == windowMaxSize:
-            distMat = np.tril(distance_matrix(window, window))
+        if window.shape[0] == windowMaxSize:   # Once the window size reaches its max:
+            distMat = np.tril(distance_matrix(window, window))   # Construct the lower triangular distance matrix.
+
+            # Dump the contents of the window in a file.
             np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
+
+            # Find the average nearest neighbor distance in the existing partition (i.e. Partition 0).
+            nnDistsPartition0 = []
+            nnDist0thPoint = min(distMat[1:, 0])
+            nnDistsPartition0.append(nnDist0thPoint)
+            for index in range(1, windowMaxSize):
+                row = distMat[index, :index]
+                column = distMat[index+1:, index]
+                distsFromPoint = np.append(row, column)
+                nnDistPoint = min(distsFromPoint)
+                nnDistsPartition0.append(nnDistPoint)
+
+            avgNNDistPartition0 = statistics.mean(nnDistsPartition0)
+            avgNNDistPartitions[label] = avgNNDistPartition0
 
 
     else:
-        if len(set(partitionLabels)) == 1:
-            if
+        if len(avgNNDistPartitions) == 1:   # If the window is 'pure':
+            # Compute the distances from the current vector to the existing ones in the window.
+            distsFromCurrVec = []
+            for existingVector in window:
+                existingVector.shape = (1, dim)
+                dist = np.linalg.norm(existingVector - currVec)
+                distsFromCurrVec.append(dist)
+
+            # Sort the distances from the current vector (to the existing ones in the window) in increasing order.
+            ascendingDists = sorted(distsFromCurrVec)
+
+            # Find the distance from the current vector to its nearest neighbor in the window.
+            nnDistCurrVec = ascendingDists[0]

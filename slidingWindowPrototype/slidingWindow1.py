@@ -33,7 +33,7 @@ window = np.empty([0, dim])   # Create an empty sliding window.
 windowMaxSize = 200   # Set the maximum number of data points the window may contain.
 pointCounter = 0
 f1 = 4   # A factor that determines when new data points are added to the sliding window.
-f2 = 0.05
+# f2 = 0.05
 
 # Create two lists for the LRU architecture.
 windowKeys = []
@@ -86,9 +86,23 @@ for currVec in data:   # Loop through each vector in the data:
             # of the distance matrix.
             nnDistNN = min(distMat[1:, 0])
         else:
-            # Pick the min of the nnIndex-th row (up to the diagonal element of the row starting which all
-            # elements are 0's) of the distance matrix.
-            nnDistNN = min(distMat[nnIndex, :nnIndex])
+            # Get the distances from the nearest neighbor to other points in the window. To do that, append the
+            # elements of the nnIndex-th column beyond the diagonal element to the nnIndex-th row (up to the diagonal
+            # element of the row) of the distance matrix. A simple example of a 5 x 5 distance matrix is given below:
+            #
+            # testDistMat = np.array(
+            #     [[0, 0, 0, 0, 0], [21, 0, 0, 0, 0], [31, 32, 0, 0, 0], [41, 42, 43, 0, 0], [51, 52, 53, 54, 0]])
+            #
+            # nnIndex = 2
+            # row = testDistMat[nnIndex, :nnIndex]
+            # column = testDistMat[nnIndex+1:, nnIndex]
+            # distsFromNN = np.append(row, column)
+            # nnDistNN = min(distsFromNN)
+
+            distsInRow = distMat[nnIndex, :nnIndex]
+            distsInColumn = distMat[nnIndex+1:, nnIndex]
+            distsFromNN = np.append(distsInRow, distsInColumn)
+            nnDistNN = min(distsFromNN)
 
         print(pointCounter)
         print('nnDistCurrVec = ' + str(nnDistCurrVec) + ', ' + 'nnDistNN = ' + str(nnDistNN))
@@ -98,8 +112,8 @@ for currVec in data:   # Loop through each vector in the data:
 
         # Test the main criteria for adding the current vector to the sliding window.
         # If the current vector is to be added:
-        # if (nnDistCurrVec / nnDistNN > f1) or gapInSortedDists(ascendingDists):
-        if (nnDistCurrVec/nnDistNN > f1) or (nnDistCurrVec/nnDistNN < f2) or gapInSortedDists(ascendingDists):
+        if (nnDistCurrVec / nnDistNN > f1) or gapInSortedDists(ascendingDists):
+        # if (nnDistCurrVec/nnDistNN > f1) or (nnDistCurrVec/nnDistNN < f2) or gapInSortedDists(ascendingDists):
             print("Point Added")
             print('=====================================================================================')
             keyToBeDeleted = dynamicKeyContainer.pop(0)   # Delete and return the first element from the list.
@@ -138,6 +152,6 @@ for currVec in data:   # Loop through each vector in the data:
 
 
 # np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
-# print(distMat)
+print(type(distMat))
 # print(min(distMat[1:,0]))
 # print(list(distMat[3,:]).index(min(distMat[3,:3])))
