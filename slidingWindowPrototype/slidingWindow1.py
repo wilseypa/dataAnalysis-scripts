@@ -152,6 +152,8 @@ for currVec in data:   # Loop through each vector in the data:
 
 
 # np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
-print(type(distMat))
+# print(type(distMat))
+# print(type(window))
+# print(type(currVec))
 # print(min(distMat[1:,0]))
 # print(list(distMat[3,:]).index(min(distMat[3,:3])))
