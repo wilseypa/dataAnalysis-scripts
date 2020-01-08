@@ -4,61 +4,112 @@ import statistics
 import random
 
 # Determine whether the current vector belongs to any of the existing partitions.
-def determineMembership(nnDistsFrmCurrVecToPartns, avgNNDistPartitions, f3):
+def determineMembership(nnDistsFrmCurrVecToPartns, avgNNDistPartitions, f1, f2, f3):
+    existingLabels = list(avgNNDistPartitions.keys())   # Create a list of existing partition labels in the window.
+    maxLabel = max(existingLabels)   # Find the max. of the existing partition labels.
+
+    # Find the minimum of the distances from the current vector to the existing partitions.
+    minDistFrmCurrVecToPartn = min(nnDistsFrmCurrVecToPartns.values())
+
+    # Find the partition(s) that is (are) nearest to the current vector.
+    nearestPartitions = [k for k in nnDistsFrmCurrVecToPartns
+                         if nnDistsFrmCurrVecToPartns[k] == minDistFrmCurrVecToPartn]
 
     # If the (nearest neighbor) distance from the current vector to any partition is 0, assign the current
     # vector to that partition. If there are more than one such partitions, assign the current vector randomly
     # to one of them.
-    if 0 in nnDistsFrmCurrVecToPartns.values():
-
-        # Make a list of partition label(s) from which the distance to the current vector is 0.
-        zeroDistPartition = [partn for partn, dist in nnDistsFrmCurrVecToPartns.items() if dist == 0]
-
-        # (Randomly) Assign the current vector to a (the) 0-distance partition.
-        assignedPartition = random.choice(zeroDistPartition)
-
+    if minDistFrmCurrVecToPartn == 0:
+        assignedPartition = random.choice(nearestPartitions)
         return assignedPartition
 
-    if -1 in avgNNDistPartitions.values():   # If the window has one or more partitions with exactly 1 point:
+    # Find the max of the avg. nearest neighbor distances of the existing partitions in the window.
+    maxAvgNNdPartns = max(avgNNDistPartitions.values())
 
+    # If the minimum distance from the current vector to existing partitions is higher than f2 * maxAvgNNdPartns,
+    # assign a new partition to the current vector.
+    if minDistFrmCurrVecToPartn > (f2 * maxAvgNNdPartns):
+        return maxLabel + 1
+
+    # Create a list of 'regular' partitions. Here, 'regular' partition means a partition with >1 point whose
+    # avg. nearest neighbor distance is not 0.
+    regularPartns = [partns for partns, avgNNd in avgNNDistPartitions.items() if avgNNd > 0]
+
+    # Filter the 'regular' partition(s) for which f1 <= r <= f2, where r is the ratio of the NN distance
+    # from the current vector to a partition and the avg. NN distance in that partition.
+    rpSimilarToCurrVec = [rp for rp in regularPartns
+                        if nnDistsFrmCurrVecToPartns[rp] / avgNNDistPartitions[rp] >= f1
+                        or nnDistsFrmCurrVecToPartns[rp] / avgNNDistPartitions[rp] <= f2]
+
+    if -1 in avgNNDistPartitions.values():   # If the window has one or more partitions with exactly 1 point:
         # Make a list of partition label(s) with only 1 point in them.
         singlePointPartition = [sp for sp, avgNNd in avgNNDistPartitions.items() if avgNNd == -1]
 
-        # Filter those partition label(s) from the previous list whose distance(s) to the current vector
+        # Filter the partition label(s) from the previous list whose distance(s) to the current vector
         # is (are) not higher than the max of avg. nearest neighbor distances of the existing partitions.
         closeSPP = [cspp for cspp in singlePointPartition
-                    if nnDistsFrmCurrVecToPartns[cspp] <= max(avgNNDistPartitions.values())]
+                    if nnDistsFrmCurrVecToPartns[cspp] <= maxAvgNNdPartns]
 
         if len(closeSPP) != 0:   # If the list 'closeSPP' is not empty:
-
-            # Find the minimum value of the distance from the current vector to the existing partitions.
-            minDistFrmCurrVecToPartn = min(nnDistsFrmCurrVecToPartns.values())
-
-            # Find the partition(s) that correspond(s) to the minimum distance value computed above.
-            closestPartitions = [k for k in nnDistsFrmCurrVecToPartns
-                                 if nnDistsFrmCurrVecToPartns[k] == minDistFrmCurrVecToPartn]
-
             # Find the single-point partition(s) that is (are) nearest to the current vector.
-            closestSPP = list(set(closestPartitions) & set(closeSPP))
+            closestSPP = list(set(nearestPartitions) & set(closeSPP))
 
             if len(closestSPP) != 0:
                 return max(closestSPP)
 
-        elif 0 in avgNNDistPartitions.values():
-
+        if 0 in avgNNDistPartitions.values():   # If any of partitions has(ve) avg. NN distance = 0:
             # Create a list of partition(s) with >1 point that has(ve) avg. nearest neighbor distance = 0.
             zeroNNdistPartns = [partns for partns, avgNNd in avgNNDistPartitions.items() if avgNNd == 0]
 
-            # Filter those partition(s) from the previous list whose distance(s) to the current vector
+            # Filter the partition(s) from the previous list whose distance(s) to the current vector
             # is (are) less than f3.
             p0CloseToCurrVec = [p0 for p0 in zeroNNdistPartns if nnDistsFrmCurrVecToPartns[p0] < f3]
 
+            candidatePartns = p0CloseToCurrVec + rpSimilarToCurrVec
 
+            # Filter the partition(s) from the previous list that is (are) nearest to the current vector.
+            nearestCandidatePartns = list(set(nearestPartitions) & set(candidatePartns))
 
+            if len(nearestCandidatePartns) != 0:
+                # (Randomly) Assign the current vector to a (the) partition filtered above.
+                assignedPartition = random.choice(nearestCandidatePartns)
+                return assignedPartition
 
+        else:
+            candidatePartns = rpSimilarToCurrVec
+            nearestCandidatePartns = list(set(nearestPartitions) & set(candidatePartns))
 
+            if len(nearestCandidatePartns) != 0:
+                assignedPartition = random.choice(nearestCandidatePartns)
+                return assignedPartition
 
-    
+    else:
+        if 0 in avgNNDistPartitions.values():  # If any of partitions has(ve) avg. NN distance = 0:
+            # Create a list of partition(s) with >1 point that has(ve) avg. nearest neighbor distance = 0.
+            zeroNNdistPartns = [partns for partns, avgNNd in avgNNDistPartitions.items() if avgNNd == 0]
+
+            # Filter the partition(s) from the previous list whose distance(s) to the current vector
+            # is (are) less than f3.
+            p0CloseToCurrVec = [p0 for p0 in zeroNNdistPartns if nnDistsFrmCurrVecToPartns[p0] < f3]
+
+            candidatePartns = p0CloseToCurrVec + rpSimilarToCurrVec
+
+            # Filter the partition(s) from the previous list that is (are) nearest to the current vector.
+            nearestCandidatePartns = list(set(nearestPartitions) & set(candidatePartns))
+
+            if len(nearestCandidatePartns) != 0:
+                # (Randomly) Assign the current vector to a (the) partition filtered above.
+                assignedPartition = random.choice(nearestCandidatePartns)
+                return assignedPartition
+
+        else:
+            candidatePartns = rpSimilarToCurrVec
+            nearestCandidatePartns = list(set(nearestPartitions) & set(candidatePartns))
+
+            if len(nearestCandidatePartns) != 0:
+                assignedPartition = random.choice(nearestCandidatePartns)
+                return assignedPartition
+
+    return maxLabel + 1
 
 
 data = np.genfromtxt('testData.csv', delimiter=',', skip_header=1)   # Load the entire data as a numpy array.
@@ -212,5 +263,5 @@ for currVec in data:   # Loop through each vector in the data:
             # Determine the membership of the current vector to one of the existing partitions in the window.
             # If the current vector cannot be assigned to any of the existing partitions, create a new partition
             # with only the current vector.
-            targetPartition = determineMembership(nnDistsFrmCurrVecToPartns, avgNNDistPartitions, f3)
+            targetPartition = determineMembership(nnDistsFrmCurrVecToPartns, avgNNDistPartitions, f1, f2, f3)
 
