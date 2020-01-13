@@ -67,7 +67,14 @@ key = 0
 # f1 = 0.5
 f2 = 4
 f3 = 0.25
+# minWeight = 5   # Partitions with number of points <= minWeight can be potential outliers.
 
+# A partition is considered outdated if it did not receive any new point for more than
+# the last 25 insertions.
+timeToBeOutdated = 25
+
+numPointsPartn = {}   # Create a dictionary to store the number of points in each partition.
+maxKeys = {}   # Create a dictionary to store the maxKey of each partition.
 
 for currVec in data:   # Loop through each vector in the data:
     pointCounter += 1
@@ -102,6 +109,9 @@ for currVec in data:   # Loop through each vector in the data:
             avgNNDistPartition0 = statistics.mean(nnDistsPartition0)
             avgNNDistPartitions[label] = avgNNDistPartition0
 
+            numPointsPartn[label] = windowMaxSize
+            maxKeys[label] = key - 1
+
 
     else:
         if len(avgNNDistPartitions) == 1:   # If the window is 'pure':
@@ -133,11 +143,7 @@ for currVec in data:   # Loop through each vector in the data:
                 print("==============================================================================================")
                 continue
 
-            if avgNNDistSinglePartition == 0 or \
-                    (nnDistCurrVec / avgNNDistSinglePartition > f2):
-            # if avgNNDistSinglePartition == 0 or \
-            #         (nnDistCurrVec/avgNNDistSinglePartition < f1) or \
-            #         (nnDistCurrVec/avgNNDistSinglePartition > f2):
+            if avgNNDistSinglePartition == 0 or nnDistCurrVec / avgNNDistSinglePartition > f2:
                 deletedKey = windowKeys.pop(0)   # Delete the key (the lowest key) from the front of the list.
                 deletedLabel = partitionLabels.pop(0)   # Delete the label from the front of the list.
                 window = np.delete(window, 0, axis=0)  # Delete the vector from the front of the sliding window.
@@ -163,12 +169,19 @@ for currVec in data:   # Loop through each vector in the data:
                 avgNNDistPartition = statistics.mean(nnDistsPartition)
                 avgNNDistPartitions[deletedLabel] = avgNNDistPartition
 
+                # Decrement the number of points in the existing partition by 1.
+                numPointsPartn[deletedLabel] = windowMaxSize - 1
+
+                print("Point Added")
+
                 # Insert the current vector, its key and a new label into the rear ends
                 # of the corresponding containers.
                 label = deletedLabel + 1
                 window = np.append(window, currVec, axis=0)
                 windowKeys.append(key)
                 partitionLabels.append(label)
+
+                maxKeys[label] = key
                 key += 1
 
                 # Update the distance matrix.
@@ -181,6 +194,8 @@ for currVec in data:   # Loop through each vector in the data:
                 # distances. In this case, however, the newly created partition has only one point. So, at this
                 # time, we insert a value of -1 for the average nearest neighbor distance of the new point.
                 avgNNDistPartitions[label] = -1
+
+                numPointsPartn[label] = 1
 
             print(pointCounter)
             print(avgNNDistPartitions)
@@ -223,7 +238,13 @@ for currVec in data:   # Loop through each vector in the data:
             # with only the current vector.
             targetPartition = determineMembership(nnDistsFrmCurrVecToPartns, avgNNDistPartitions, f2, f3)
 
+            # Find the outdated partition(s).
+            outdatedPartn = [op for op in maxKeys if (key - maxKeys[op]) > timeToBeOutdated]
+
             if targetPartition not in avgNNDistPartitions:   # If the current vector was assigned a new partition:
+                # Find partitions with <= 5 points, which are potential outlier partitions.
+                # poPartitions = [po for po in numPointsPartn if numPointsPartn[po] <= minWeight]
+
                 deletedKey = windowKeys.pop(0)  # Delete the key (the lowest key) from the front of the list.
                 deletedLabel = partitionLabels.pop(0)  # Delete the label from the front of the list.
                 window = np.delete(window, 0, axis=0)  # Delete the vector from the front of the sliding window.
@@ -261,6 +282,8 @@ for currVec in data:   # Loop through each vector in the data:
 
                     avgNNdDelPartition = statistics.mean(nnDistsDelPartition)
                     avgNNDistPartitions[deletedLabel] = avgNNdDelPartition
+
+                print("Point Added")
 
                 # Insert the current vector, its key and the new label into the rear ends
                 # of the corresponding containers.
@@ -332,7 +355,8 @@ for currVec in data:   # Loop through each vector in the data:
                     avgNNdDelPartition = statistics.mean(nnDistsDelPartition)
                     avgNNDistPartitions[deletedLabel] = avgNNdDelPartition
 
-                # print(pointCounter)
+                print("Point Added")
+
                 # Insert the current vector, its key and partition label into the rear ends
                 # of the corresponding containers.
                 window = np.append(window, currVec, axis=0)
