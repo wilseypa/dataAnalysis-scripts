@@ -241,6 +241,109 @@ for currVec in data:   # Loop through each vector in the data:
             # Find the outdated partition(s).
             outdatedPartn = [op for op in maxKeys if (key - maxKeys[op]) > timeToBeOutdated]
 
+            if len(outdatedPartn) != 0:   # If there is (are) outdated partition(s):
+                # Find the number(s) of points in the outdated partition(s).
+                numPtsOutdated = [numPointsPartn[npo] for npo in outdatedPartn]
+
+                # Find the smallest size (i.e. the min. of the number(s) of points) of the outdated partition(s).
+                numPtsSmallestOutdated = min(numPtsOutdated)
+
+                # Find the smallest outdated partition(s).
+                smallestOutdated = [so for so, numPts in numPointsPartn.items() if numPts == numPtsSmallestOutdated]
+
+                partnToBeDeleted = min(smallestOutdated)
+
+                # Find the first occurrence of a partition label from which deletion will take place.
+                for i in range(windowMaxSize):
+                    if partitionLabels[i] == partnToBeDeleted:
+                        deletedLabel = partnToBeDeleted
+                        indexToBeDeleted = i
+                        del partitionLabels[i]   # Delete the partition label.
+                        break
+
+                del windowKeys[indexToBeDeleted]  # Delete the key of the vector.
+                window = np.delete(window, indexToBeDeleted, axis=0)  # Delete the vector from the sliding window.
+
+                # Delete the corresponding row and column from the distance matrix.
+                distMat = np.delete(np.delete(distMat, indexToBeDeleted, axis=0), indexToBeDeleted, axis=1)
+
+                # Delete the corresponding distance value from the list of distances from the current vector
+                # to the existing ones in the window.
+                del distsFromCurrVec[indexToBeDeleted]
+
+                # Find the positions of the points (in the window) that are members of the partition
+                # from which the point was deleted.
+                delPmemIndices = [i for i, pl in enumerate(partitionLabels) if pl == deletedLabel]
+
+                # If there are no more points left in the partition from which the deletion took place:
+                if not delPmemIndices:
+                    del avgNNDistPartitions[deletedLabel]
+                    del numPointsPartn[deletedLabel]
+                    del maxKeys[deletedLabel]
+
+                else:
+                    # Decrement the number of points in the partition from which the point was deleted by 1.
+                    numPointsPartn[deletedLabel] = numPtsSmallestOutdated - 1
+
+                    # Recompute the average nearest neighbor distance in the partition from which the
+                    # point was deleted.
+                    # If there is only 1 point left in the partition that the point was deleted from:
+                    if numPointsPartn[deletedLabel] == 1:
+                        avgNNDistPartitions[deletedLabel] = -1
+
+                    else:
+                        nnDistsDelPartition = []
+                        if delPmemIndices[0] == 0:
+                            dists0thPoint = [distMat[i, 0] for i in delPmemIndices[1:]]
+                            nnDist0thPoint = min(dists0thPoint)
+                            nnDistsDelPartition.append(nnDist0thPoint)
+
+                        for i in delPmemIndices[1:]:
+                            row = [distMat[i, :i][j] for j in delPmemIndices if j < i]
+                            column = [distMat[i+1:, i][j - (i+1)] for j in delPmemIndices if j > i]
+                            distsFromPoint = np.append(row, column)
+                            nnDistPoint = min(distsFromPoint)
+                            nnDistsDelPartition.append(nnDistPoint)
+
+                        avgNNdDelPartition = statistics.mean(nnDistsDelPartition)
+                        avgNNDistPartitions[deletedLabel] = avgNNdDelPartition
+
+                print("Point Added")
+
+                # Insert the current vector, its key and partition label into the rear ends
+                # of the corresponding containers.
+                window = np.append(window, currVec, axis=0)
+                windowKeys.append(key)
+                partitionLabels.append(targetPartition)
+                maxKeys[targetPartition] = key   # Insert or update the maxKey of the target partition.
+
+                if targetPartition not in avgNNDistPartitions:  # If the current vector was assigned a new partition:
+                    avgNNDistPartitions[targetPartition] = -1
+                    numPointsPartn[targetPartition] = 1
+
+                else:  # The current vector is assigned to one of the existing partitions:
+                    # Retrieve the avg. nearest neighbor distance in the target partition.
+                    avgNNdTP = avgNNDistPartitions[targetPartition]
+
+                    if avgNNdTP == -1:   # If the target partition previously had only 1 point:
+                        # Update the avg. nearest neighbor distance of the partition the current vector was added to.
+                        avgNNDistPartitions[targetPartition] = nnDistsFrmCurrVecToPartns[targetPartition]
+                        numPointsPartn[targetPartition] = 2
+
+                    else:
+                        # Find the positions of the points (in the window) that are members of the target partition.
+                        tpMemIndices = [i for i, tp in enumerate(partitionLabels) if tp == targetPartition]
+
+
+                key += 1
+
+                # Update the distance matrix.
+                distsFromCurrVecArray = np.array(distsFromCurrVec).reshape(1, windowMaxSize - 1)
+                distMat = np.append(distMat, distsFromCurrVecArray, axis=0)  # Add a row to the bottom of the matrix.
+                zeroColumn = np.array([0] * windowMaxSize).reshape(windowMaxSize, 1)
+                distMat = np.append(distMat, zeroColumn, axis=1)  # Add a column to the right of the matrix.
+
+
             if targetPartition not in avgNNDistPartitions:   # If the current vector was assigned a new partition:
                 # Find partitions with <= 5 points, which are potential outlier partitions.
                 # poPartitions = [po for po in numPointsPartn if numPointsPartn[po] <= minWeight]
