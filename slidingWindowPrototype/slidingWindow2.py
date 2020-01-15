@@ -77,6 +77,9 @@ numPointsPartn = {}   # Create a dictionary to store the number of points in eac
 maxKeys = {}   # Create a dictionary to store the maxKey of each partition.
 
 for currVec in data:   # Loop through each vector in the data:
+    # Dump the content of the window to a file with the arrival of every n new data vectors from the stream.
+    if (pointCounter % windowMaxSize == 0) and (pointCounter > windowMaxSize):  # Here, n = windowMaxSize
+        np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
     pointCounter += 1
     currVec.shape = (1, dim)
 
@@ -93,7 +96,7 @@ for currVec in data:   # Loop through each vector in the data:
             distMat = np.tril(distance_matrix(window, window))   # Construct the lower triangular distance matrix.
 
             # Dump the contents of the window in a file.
-            np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
+            # np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
 
             # Find the average nearest neighbor distance in the existing partition (i.e. Partition 0).
             nnDistsPartition0 = []
@@ -137,7 +140,7 @@ for currVec in data:   # Loop through each vector in the data:
                 print("==============================================================================================")
                 continue
 
-            if avgNNDistSinglePartition == 0 and nnDistCurrVec < f3:
+            if avgNNDistSinglePartition <= f3 and nnDistCurrVec <= 1:
                 print(pointCounter)
                 print(avgNNDistPartitions)
                 print("==============================================================================================")
@@ -293,12 +296,7 @@ for currVec in data:   # Loop through each vector in the data:
 
                     else:
                         nnDistsDelPartition = []
-                        if delPmemIndices[0] == 0:
-                            dists0thPoint = [distMat[i, 0] for i in delPmemIndices[1:]]
-                            nnDist0thPoint = min(dists0thPoint)
-                            nnDistsDelPartition.append(nnDist0thPoint)
-
-                        for i in delPmemIndices[1:]:
+                        for i in delPmemIndices:
                             row = [distMat[i, :i][j] for j in delPmemIndices if j < i]
                             column = [distMat[i+1:, i][j - (i+1)] for j in delPmemIndices if j > i]
                             distsFromPoint = np.append(row, column)
@@ -317,6 +315,12 @@ for currVec in data:   # Loop through each vector in the data:
                 partitionLabels.append(targetPartition)
                 maxKeys[targetPartition] = key   # Insert or update the maxKey of the target partition.
 
+                # Update the distance matrix.
+                distsFromCurrVecArray = np.array(distsFromCurrVec).reshape(1, windowMaxSize - 1)
+                distMat = np.append(distMat, distsFromCurrVecArray, axis=0)  # Add a row to the bottom of the matrix.
+                zeroColumn = np.array([0] * windowMaxSize).reshape(windowMaxSize, 1)
+                distMat = np.append(distMat, zeroColumn, axis=1)  # Add a column to the right of the matrix.
+
                 if targetPartition not in avgNNDistPartitions:  # If the current vector was assigned a new partition:
                     avgNNDistPartitions[targetPartition] = -1
                     numPointsPartn[targetPartition] = 1
@@ -334,161 +338,184 @@ for currVec in data:   # Loop through each vector in the data:
                         # Find the positions of the points (in the window) that are members of the target partition.
                         tpMemIndices = [i for i, tp in enumerate(partitionLabels) if tp == targetPartition]
 
+                        # Recompute the average nearest neighbor distance in the target partition.
+                        nnDistsTP = []
+                        for i in tpMemIndices:
+                            row = [distMat[i, :i][j] for j in tpMemIndices if j < i]
+                            column = [distMat[i+1:, i][j - (i+1)] for j in tpMemIndices if j > i]
+                            distsFromPoint = np.append(row, column)
+                            nnDistPoint = min(distsFromPoint)
+                            nnDistsTP.append(nnDistPoint)
+
+                        avgNNdTargetPartn = statistics.mean(nnDistsTP)
+                        avgNNDistPartitions[targetPartition] = avgNNdTargetPartn
+                        numPointsPartn[targetPartition] = numPointsPartn[targetPartition] + 1
 
                 key += 1
 
-                # Update the distance matrix.
-                distsFromCurrVecArray = np.array(distsFromCurrVec).reshape(1, windowMaxSize - 1)
-                distMat = np.append(distMat, distsFromCurrVecArray, axis=0)  # Add a row to the bottom of the matrix.
-                zeroColumn = np.array([0] * windowMaxSize).reshape(windowMaxSize, 1)
-                distMat = np.append(distMat, zeroColumn, axis=1)  # Add a column to the right of the matrix.
+            else:   # There is no outdated partition in the window:
+                if targetPartition not in avgNNDistPartitions:  # If the current vector was assigned a new partition:
+                    deletedKey = windowKeys.pop(0)  # Delete the key (the lowest key) from the front of the list.
+                    deletedLabel = partitionLabels.pop(0)  # Delete the label from the front of the list.
+                    window = np.delete(window, 0, axis=0)  # Delete the vector from the front of the sliding window.
 
+                    # Delete the 0-th row and 0-th column from the distance matrix.
+                    distMat = np.delete(np.delete(distMat, 0, axis=0), 0, axis=1)
 
-            if targetPartition not in avgNNDistPartitions:   # If the current vector was assigned a new partition:
-                # Find partitions with <= 5 points, which are potential outlier partitions.
-                # poPartitions = [po for po in numPointsPartn if numPointsPartn[po] <= minWeight]
+                    # Delete the corresponding distance value from the list of distances from the current vector
+                    # to the existing ones in the window.
+                    distsFromCurrVec.pop(0)
 
-                deletedKey = windowKeys.pop(0)  # Delete the key (the lowest key) from the front of the list.
-                deletedLabel = partitionLabels.pop(0)  # Delete the label from the front of the list.
-                window = np.delete(window, 0, axis=0)  # Delete the vector from the front of the sliding window.
+                    # Find the positions of the points (in the window) that are members of the partition
+                    # from which the point was deleted.
+                    delPmemIndices = [i for i, pl in enumerate(partitionLabels) if pl == deletedLabel]
 
-                # Delete the 0-th row and 0-th column from the distance matrix.
-                distMat = np.delete(np.delete(distMat, 0, axis=0), 0, axis=1)
+                    # If there are no more points left in the partition from which the deletion took place:
+                    if not delPmemIndices:
+                        del avgNNDistPartitions[deletedLabel]
+                        del numPointsPartn[deletedLabel]
+                        del maxKeys[deletedLabel]
 
-                # Delete the corresponding distance value from the list of distances from the current vector
-                # to the existing ones in the window.
-                distsFromCurrVec.pop(0)
+                    else:
+                        # Decrement the number of points in the partition from which the point was deleted by 1.
+                        numPointsPartn[deletedLabel] = numPointsPartn[deletedLabel] - 1
 
-                # Find the positions of the points (in the window) that are members of the partition
-                # from which the deletion took place.
-                delPmemIndices = [i for i, pl in enumerate(partitionLabels) if pl == deletedLabel]
+                        # Recompute the average nearest neighbor distance in the partition from which the
+                        # point was deleted.
+                        # If there is only 1 point left in the partition that the point was deleted from:
+                        if numPointsPartn[deletedLabel] == 1:
+                            avgNNDistPartitions[deletedLabel] = -1
 
-                # If there are no more points left in the partition from which the deletion took place:
-                if not delPmemIndices:
-                    del avgNNDistPartitions[deletedLabel]
+                        else:
+                            nnDistsDelPartition = []
+                            for i in delPmemIndices:
+                                row = [distMat[i, :i][j] for j in delPmemIndices if j < i]
+                                column = [distMat[i+1:, i][j - (i+1)] for j in delPmemIndices if j > i]
+                                distsFromPoint = np.append(row, column)
+                                nnDistPoint = min(distsFromPoint)
+                                nnDistsDelPartition.append(nnDistPoint)
 
-                else:
-                    # Recompute the average nearest neighbor distance in the partition from which the
-                    # point was deleted.
-                    nnDistsDelPartition = []
-                    if delPmemIndices[0] == 0:
-                        nnDist0thPoint = min(distMat[1:, 0])
-                        nnDistsDelPartition.append(nnDist0thPoint)
-                        delPmemIndices.pop(0)
+                            avgNNdDelPartition = statistics.mean(nnDistsDelPartition)
+                            avgNNDistPartitions[deletedLabel] = avgNNdDelPartition
 
-                    for index in delPmemIndices:
-                        row = distMat[index, :index]
-                        column = distMat[index + 1:, index]
-                        distsFromPoint = np.append(row, column)
-                        nnDistPoint = min(distsFromPoint)
-                        nnDistsDelPartition.append(nnDistPoint)
+                    print("Point Added")
 
-                    avgNNdDelPartition = statistics.mean(nnDistsDelPartition)
-                    avgNNDistPartitions[deletedLabel] = avgNNdDelPartition
+                    # Insert the current vector, its key and the new label into the rear ends
+                    # of the corresponding containers.
+                    window = np.append(window, currVec, axis=0)
+                    windowKeys.append(key)
+                    partitionLabels.append(targetPartition)
+                    maxKeys[targetPartition] = key
 
-                print("Point Added")
+                    key += 1
 
-                # Insert the current vector, its key and the new label into the rear ends
-                # of the corresponding containers.
-                window = np.append(window, currVec, axis=0)
-                windowKeys.append(key)
-                partitionLabels.append(targetPartition)
-                key += 1
+                    # Update the distance matrix.
+                    distsFromCurrVecArray = np.array(distsFromCurrVec).reshape(1, windowMaxSize - 1)
+                    distMat = np.append(distMat, distsFromCurrVecArray, axis=0)
+                    zeroColumn = np.array([0] * windowMaxSize).reshape(windowMaxSize, 1)
+                    distMat = np.append(distMat, zeroColumn, axis=1)  # Add a column to the right of the matrix.
 
-                # Update the distance matrix.
-                distsFromCurrVecArray = np.array(distsFromCurrVec).reshape(1, windowMaxSize - 1)
-                distMat = np.append(distMat, distsFromCurrVecArray, axis=0)  # Add a row to the bottom of the matrix.
-                zeroColumn = np.array([0] * windowMaxSize).reshape(windowMaxSize, 1)
-                distMat = np.append(distMat, zeroColumn, axis=1)  # Add a column to the right of the matrix.
+                    # Add a new key, value pair to the dictionary of partitions and their average nearest neighbor
+                    # distances. In this case, however, the newly created partition has only one point. So, at this
+                    # time, we insert a value of -1 for the average nearest neighbor distance of the new point.
+                    avgNNDistPartitions[targetPartition] = -1
+                    numPointsPartn[targetPartition] = 1
 
-                # Add a new key, value pair to the dictionary of partitions and their average nearest neighbor
-                # distances. In this case, however, the newly created partition has only one point. So, at this
-                # time, we insert a value of -1 for the average nearest neighbor distance of the new point.
-                avgNNDistPartitions[targetPartition] = -1
+                else:   # The current vector is assigned to one of the existing partitions:
+                    # Find the first occurrence of a partition label != targetPartition label.
+                    for i in range(windowMaxSize):
+                        if partitionLabels[i] != targetPartition:
+                            deletedLabel = partitionLabels[i]
+                            indexToBeDeleted = i
+                            del partitionLabels[i]  # Delete the partition label.
+                            break
 
-            else:   # The current vector is assigned to one of the existing partitions:
-                # Count the number of points in the target partition.
-                numPointsTP = partitionLabels.count(targetPartition)
+                    del windowKeys[indexToBeDeleted]  # Delete the key of the vector.
+                    window = np.delete(window, indexToBeDeleted, axis=0)  # Delete the vector from the sliding window.
 
-                # Retrieve the avg. nearest neighbor distance in the target partition.
-                avgNNdTP = avgNNDistPartitions[targetPartition]
+                    # Delete the corresponding row and column from the distance matrix.
+                    distMat = np.delete(np.delete(distMat, indexToBeDeleted, axis=0), indexToBeDeleted, axis=1)
 
-                # Find the first occurrence of a partition label != targetPartition label.
-                for i in range(windowMaxSize):
-                    if partitionLabels[i] != targetPartition:
-                        deletedLabel = partitionLabels[i]
-                        indexToBeDeleted = i
-                        del partitionLabels[i]   # Delete the partition label.
-                        break
+                    # Delete the corresponding distance value from the list of distances from the current vector
+                    # to the existing ones in the window.
+                    del distsFromCurrVec[indexToBeDeleted]
 
-                del windowKeys[indexToBeDeleted]  # Delete the key of the vector.
-                window = np.delete(window, indexToBeDeleted, axis=0)  # Delete the vector from the sliding window.
+                    # Find the positions of the points (in the window) that are members of the partition
+                    # from which the point was deleted.
+                    delPmemIndices = [i for i, pl in enumerate(partitionLabels) if pl == deletedLabel]
 
-                # Delete the corresponding row and column from the distance matrix.
-                distMat = np.delete(np.delete(distMat, indexToBeDeleted, axis=0), indexToBeDeleted, axis=1)
+                    # If there are no more points left in the partition from which the deletion took place:
+                    if not delPmemIndices:
+                        del avgNNDistPartitions[deletedLabel]
+                        del numPointsPartn[deletedLabel]
+                        del maxKeys[deletedLabel]
 
-                # Delete the corresponding distance value from the list of distances from the current vector
-                # to the existing ones in the window.
-                del distsFromCurrVec[indexToBeDeleted]
+                    else:
+                        # Decrement the number of points in the partition from which the point was deleted by 1.
+                        numPointsPartn[deletedLabel] = numPointsPartn[deletedLabel] - 1
 
-                # Find the positions of the points (in the window) that are members of the partition
-                # from which the deletion took place.
-                delPmemIndices = [i for i, pl in enumerate(partitionLabels) if pl == deletedLabel]
+                        # Recompute the average nearest neighbor distance in the partition from which the
+                        # point was deleted.
+                        # If there is only 1 point left in the partition that the point was deleted from:
+                        if numPointsPartn[deletedLabel] == 1:
+                            avgNNDistPartitions[deletedLabel] = -1
 
-                # If there are no more points left in the partition from which the deletion took place:
-                if not delPmemIndices:
-                    del avgNNDistPartitions[deletedLabel]
+                        else:
+                            nnDistsDelPartition = []
+                            for i in delPmemIndices:
+                                row = [distMat[i, :i][j] for j in delPmemIndices if j < i]
+                                column = [distMat[i+1:, i][j - (i+1)] for j in delPmemIndices if j > i]
+                                distsFromPoint = np.append(row, column)
+                                nnDistPoint = min(distsFromPoint)
+                                nnDistsDelPartition.append(nnDistPoint)
 
-                else:
-                    # Recompute the average nearest neighbor distance in the partition from which the
-                    # point was deleted.
-                    nnDistsDelPartition = []
-                    if delPmemIndices[0] == 0:
-                        nnDist0thPoint = min(distMat[1:, 0])
-                        nnDistsDelPartition.append(nnDist0thPoint)
-                        delPmemIndices.pop(0)
+                            avgNNdDelPartition = statistics.mean(nnDistsDelPartition)
+                            avgNNDistPartitions[deletedLabel] = avgNNdDelPartition
 
-                    for index in delPmemIndices:
-                        row = distMat[index, :index]
-                        column = distMat[index + 1:, index]
-                        distsFromPoint = np.append(row, column)
-                        nnDistPoint = min(distsFromPoint)
-                        nnDistsDelPartition.append(nnDistPoint)
+                    print("Point Added")
 
-                    avgNNdDelPartition = statistics.mean(nnDistsDelPartition)
-                    avgNNDistPartitions[deletedLabel] = avgNNdDelPartition
+                    # Insert the current vector, its key and partition label into the rear ends
+                    # of the corresponding containers.
+                    window = np.append(window, currVec, axis=0)
+                    windowKeys.append(key)
+                    partitionLabels.append(targetPartition)
+                    maxKeys[targetPartition] = key   # Update the maxKey of the target partition.
 
-                print("Point Added")
+                    key += 1
 
-                # Insert the current vector, its key and partition label into the rear ends
-                # of the corresponding containers.
-                window = np.append(window, currVec, axis=0)
-                windowKeys.append(key)
-                partitionLabels.append(targetPartition)
-                key += 1
+                    # Update the distance matrix.
+                    distsFromCurrVecArray = np.array(distsFromCurrVec).reshape(1, windowMaxSize - 1)
+                    distMat = np.append(distMat, distsFromCurrVecArray, axis=0)  # Add a row to the bottom of the matrix
+                    zeroColumn = np.array([0] * windowMaxSize).reshape(windowMaxSize, 1)
+                    distMat = np.append(distMat, zeroColumn, axis=1)  # Add a column to the right of the matrix.
 
-                # Update the distance matrix.
-                distsFromCurrVecArray = np.array(distsFromCurrVec).reshape(1, windowMaxSize - 1)
-                distMat = np.append(distMat, distsFromCurrVecArray, axis=0)  # Add a row to the bottom of the matrix.
-                zeroColumn = np.array([0] * windowMaxSize).reshape(windowMaxSize, 1)
-                distMat = np.append(distMat, zeroColumn, axis=1)  # Add a column to the right of the matrix.
+                    # Retrieve the avg. nearest neighbor distance in the target partition.
+                    avgNNdTP = avgNNDistPartitions[targetPartition]
 
-                # Update the avg. nearest neighbor distance of the partition the current vector was added to.
-                if avgNNdTP == -1:
-                    avgNNDistPartitions[targetPartition] = nnDistsFrmCurrVecToPartns[targetPartition]
+                    if avgNNdTP == -1:  # If the target partition previously had only 1 point:
+                        # Update the avg. nearest neighbor distance of the partition the current vector was added to.
+                        avgNNDistPartitions[targetPartition] = nnDistsFrmCurrVecToPartns[targetPartition]
+                        numPointsPartn[targetPartition] = 2
 
-                else:
-                    nnD = nnDistsFrmCurrVecToPartns[targetPartition]
-                    avgNNDistPartitions[targetPartition] = (numPointsTP * avgNNdTP + nnD) / (numPointsTP + 1)
+                    else:
+                        # Find the positions of the points (in the window) that are members of the target partition.
+                        tpMemIndices = [i for i, tp in enumerate(partitionLabels) if tp == targetPartition]
+
+                        # Recompute the average nearest neighbor distance in the target partition.
+                        nnDistsTP = []
+                        for i in tpMemIndices:
+                            row = [distMat[i, :i][j] for j in tpMemIndices if j < i]
+                            column = [distMat[i+1:, i][j - (i+1)] for j in tpMemIndices if j > i]
+                            distsFromPoint = np.append(row, column)
+                            nnDistPoint = min(distsFromPoint)
+                            nnDistsTP.append(nnDistPoint)
+
+                        avgNNdTargetPartn = statistics.mean(nnDistsTP)
+                        avgNNDistPartitions[targetPartition] = avgNNdTargetPartn
+                        numPointsPartn[targetPartition] = numPointsPartn[targetPartition] + 1
 
             print(pointCounter)
             print(nnDistsFrmCurrVecToPartns)
             print("targetPartition " + str(targetPartition))
             print(avgNNDistPartitions)
             print("==================================================================================================")
-
-
-        # Dump the content of the window to a file with the arrival of every n new data vectors from the stream.
-        if (pointCounter % windowMaxSize == 0) and (pointCounter > windowMaxSize):  # Here, n = windowMaxSize
-            np.savetxt('windowInstances/p' + str(pointCounter) + '.csv', window, delimiter=',')
-            # print(str(pointCounter) + " " + str(avgNNDistPartitions))
