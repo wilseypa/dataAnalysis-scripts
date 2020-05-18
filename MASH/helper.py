@@ -66,11 +66,11 @@ def parse_gene_file(f):
     P = []
     S = open(f, 'r').read()
     S = S.split('>')
-    print(len(S))
+    #print(len(S))
 
     for s in S:
         x = s.split('\n')[1:]
-        p = ''.join(x) 
+        p = ''.join(x).replace(' ','')
         P = P + [p]
     
     return P

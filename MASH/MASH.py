@@ -21,20 +21,15 @@ import jac
 from jac import sorted_insert
 
 
-in_file = 'right.fa'
-dist_file = 'rightDistMat.csv'
-ofile = 'output/right_mash_dist.csv'
-in_file = 'left.fa'
-dist_file = 'leftDistMat.csv'
-ofile = 'output/left_mash_dist.csv'
-in_file = 'concatSeq.fa'
-dist_file = 'concatDistMat.csv'
-ofile = 'output/concat_mash_dist.csv'
+dist_file = 'datasets/rightDistMat.csv'
+ofile = 'output/concatUnaligned_s{}_c{}_k{}.csv'
+in_file = 'concatUnaligned.fa'
 
-
-def import_files():
+def import_files(If, Df=''):
     P = helper.parse_gene_file( in_file )[1:]
-    D = helper.parse_num_file( dist_file )
+    D = []
+    if Df:
+        D = helper.parse_num_file( dist_file )
     
     return P,D
 
@@ -122,8 +117,8 @@ def get_k(n, q, alph_size=4):
    return int(x)+1
 
 
-def comp_dists( size ):
-    P, D = import_files()
+def comp_dists( size, s, c, k ):
+    P, D = import_files(in_file, dist_file)
     
     SIZE = range( size )
 
@@ -132,14 +127,12 @@ def comp_dists( size ):
 
     out = 'loc: ({}, {})\nJac est: {}\ndist: {}\nactual: {}\n\n'
 
-    s = 100
-    c = 1
     q = .001
     
     h = jac.perm()
 
     for x in SIZE:
-        k = get_k( len(P[x]), q, 4)
+        #  k = get_k( len(P[x]), q, 4)  Do this????
         sketches.append( sketch( P[x], s, c, k, h ) )
     
 
@@ -175,20 +168,41 @@ def query(dists, D):
 
 
 def test2():
-    P,D = import_files()
+    P,D = import_files(in_file, dist_file)
+    print( P[1] )
 
-    g = open(ofile, 'w')
-    dists = comp_dists( len(P) )
+    time_file = open('output/times.txt','w')
+    time_line = '{} ---->  {} '
     
-    print('done')
+    # 4^12  =  16777216
+    # len   =  4500
+    S,C,K = range(1000,8500,1000),[2,1],[4,8,12,16,20,24,28]
+        
+    for k in K:
+        for c in C:
+            for s in S:
+                start = time.time()
+                
+                out_fp = ofile.format(s,c,k)
+                g = open(out_fp, 'w')
 
-    for d in dists:
-        s =''
-        for elem in d:
-            s = s + str(elem) + ','
-        g.write(s[:-1] + '\n')
-    
-    g.close()
+                
+                dists = comp_dists( len(P), s, c, k)
+                
+
+                taken = time.time() - start
+                mess = time_line.format(out_fp, taken)
+                time_file.write(mess)
+                print(mess)
+
+                for d in dists:
+                    s =''
+                    for elem in d:
+                        s = s + str(elem) + ','
+                    g.write(s[:-1] + '\n')
+                g.close()
+
+    time_file.close()
 
 test2()
 
