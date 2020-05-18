@@ -206,22 +206,4 @@ def test2():
 
 test2()
 
-def test():
-    g = open('output/umJac_100_1000.txt', 'w')
-    P, D = import_files()
-    for y in range(len(P)):
-        s1 = P[0]
-        s2 = P[y]
-        
-        k = 10
-        j = jac.Jac_est( s1, s2, k, 1, 1000)
-        u_j = jac.u_Jac_est( s1, s2, k, 1, 1000)
-        m_j = dist( s1, s2, 100, 1, k)
-
-        s = 'jac: {}, ujac: {}\nmjac: {}\nMASH: {}, uMASH: {}\nmMASH: {}\nreal: {}\n'
-        s = s.format(1 - j ,1 - u_j, 1-m_j, mash_D(k,j), mash_D(k,u_j), mash_D(k,m_j), D[0][y] )
-        print(s)
-        g.write(s)
-
-
 

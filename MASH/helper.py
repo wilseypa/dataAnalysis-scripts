@@ -39,8 +39,6 @@ def disp_arr(A):
 
 # parse standard csv line
 def parse(line):
-    #s = line.split(',')
-    #return [float(g) for g in s]
     return line.strip()
 
 def parse_num(line):
