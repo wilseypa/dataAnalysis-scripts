@@ -131,6 +131,9 @@ for currVec in data:   # Loop through each vector in the data:
             # Find the distance from the current vector to its nearest neighbor in the window.
             nnDistCurrVec = ascendingDists[0]
 
+            print("nnDistCurrVec")
+            print(nnDistCurrVec)
+
             # Extract the average nearest neighbor distance in the single 'partition' in the window.
             avgNNDistSinglePartition = list(avgNNDistPartitions.values())[0]
 
@@ -145,6 +148,9 @@ for currVec in data:   # Loop through each vector in the data:
                 print(avgNNDistPartitions)
                 print("==============================================================================================")
                 continue
+
+            print("avgNNDistSinglePartition")
+            print(avgNNDistSinglePartition)
 
             if avgNNDistSinglePartition == 0 or nnDistCurrVec / avgNNDistSinglePartition > f2:
                 deletedKey = windowKeys.pop(0)   # Delete the key (the lowest key) from the front of the list.
