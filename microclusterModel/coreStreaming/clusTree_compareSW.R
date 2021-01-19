@@ -2,23 +2,24 @@ library(streamMOA)
 library(TDA)
 library(ggplot2)
 
-stream <- DSD_ReadCSV(file = "newShuffledStream.csv", header = TRUE)
+stream <- DSD_ReadCSV(file = "subsetKDDtinyWindow.csv", header = TRUE)
 
 reset_stream(stream)
-ct <- DSC_ClusTree(horizon = 450, maxHeight = 10, lambda = NULL, k = NULL)
+ct <- DSC_ClusTree(horizon = 11, maxHeight = 10, lambda = NULL, k = NULL)
 
 maxDimension <- 1
-eps <- 0.15
+eps <- 4
 
-wasserp2d11 <- numeric(9)
-wasserp2d12 <- numeric(9)
-streamProgress <- integer(9)
+wasserp2d11 <- numeric(100)
+wasserp2d12 <- numeric(100)
+streamProgress <- integer(100)
 
 # pdf(file = "~/Desktop/Plots.pdf", width = 11, height = 8.50)
 
-for (i in 1:9) {
-  update(ct, stream, 1000)
+for (i in 1:101) {
+  update(ct, stream, 10)
   centers <- data.matrix(na.omit(get_centers(ct, type = "micro")))
+  print(paste("Number of microcluster centers:", nrow(centers)))
   currDiag <- ripsDiag(X = centers, maxDimension, eps, library = "GUDHI",
                        printProgress = FALSE)
   if (i == 1) {
@@ -26,33 +27,18 @@ for (i in 1:9) {
   }
   
   if (i > 1) {
-    distance1 <- bottleneck(prevDiag[["diagram"]], currDiag[["diagram"]],
-                            dimension = 1)
-    distance2 <- bottleneck(refDiag[["diagram"]], currDiag[["diagram"]],
-                            dimension = 1)
+    distance1 <- wasserstein(prevDiag[["diagram"]], currDiag[["diagram"]],
+                             p = 2, dimension = 0)
+    distance2 <- wasserstein(refDiag[["diagram"]], currDiag[["diagram"]],
+                             p = 2, dimension = 0)
     wasserp2d11[i-1] <- distance1
     wasserp2d12[i-1] <- distance2
     
-    streamProgress[i-1] <- i*1000
+    streamProgress[i-1] <- i*10
   }
   prevDiag <- currDiag
 }
 
-update(ct, stream, 350)
-centers <- data.matrix(na.omit(get_centers(ct, type = "micro")))
-
-currDiag <- ripsDiag(X = centers, maxDimension, eps, library = "GUDHI",
-                     printProgress = FALSE)
-
-distance1 <- bottleneck(prevDiag[["diagram"]], currDiag[["diagram"]],
-                        dimension = 1)
-distance2 <- bottleneck(refDiag[["diagram"]], currDiag[["diagram"]],
-                        dimension = 1)
-
-wasserp2d11[i] <- distance1
-wasserp2d12[i] <- distance2
-
-streamProgress[i] <- i*1000 + 350
 
 # dev.off()
 close_stream(stream)
